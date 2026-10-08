@@ -763,7 +763,7 @@ function App() {
                     {usesReplays
                       ? "Загрузите попытки одной карты. Для одиночного видео выберите одну попытку."
                       : project.kind === "classic"
-                        ? "Движок берёт реплеи выбранной карты из настроенной папки реплеев. Выделение попыток и градиент здесь не применяются."
+                        ? "Движок берёт реплеи из собственной папки replays рядом с danser, а не из хранилища osu!lazer. Применяются лимит MaxPlayers и фильтр ExcludeMods. Выделение попыток и градиент здесь не применяются."
                         : "Выберите карту ниже. Реплеи для этого сценария не нужны."}
                   </p>
                 </section>
@@ -1683,9 +1683,6 @@ function App() {
                       "Исполняемый файл danser",
                       "D:\\…\\danser-studio.exe",
                     ],
-                    ["songsDir", "Папка Songs", "D:\\osu!\\Songs"],
-                    ["skinsDir", "Папка Skins", "D:\\osu!\\Skins"],
-                    ["replaysDir", "Папка реплеев osu!", "D:\\osu!\\Replays"],
                     ["outputDir", "Готовые видео", "D:\\Videos"],
                     [
                       "ffmpegPath",
@@ -1703,6 +1700,38 @@ function App() {
                       />
                     </FieldLabel>
                   ))}
+                  <details className="schema-group">
+                    <summary>
+                      Дополнительные папки: osu!stable и локальные скины
+                    </summary>
+                    <p className="note">
+                      Для lazer эти пути не нужны. Его files не является папкой
+                      Songs или Skins. Оставьте поля пустыми, если используете
+                      только lazer и импорт .osk.
+                    </p>
+                    {[
+                      [
+                        "songsDir",
+                        "Songs osu!stable (необязательно)",
+                        "D:\\osu!\\Songs",
+                      ],
+                      [
+                        "skinsDir",
+                        "Локальная папка скинов / .osk (необязательно)",
+                        "D:\\osu!\\Skins",
+                      ],
+                    ].map(([key, label, placeholder]) => (
+                      <FieldLabel key={key} label={label}>
+                        <input
+                          value={(cfg as any)[key]}
+                          placeholder={placeholder}
+                          onChange={(e) =>
+                            setCfg((c) => ({ ...c, [key]: e.target.value }))
+                          }
+                        />
+                      </FieldLabel>
+                    ))}
+                  </details>
                   <p className="note">
                     Для закреплённых цветов используйте сборку danser-studio из
                     этого проекта. Оригинальный danser поддерживает остальные

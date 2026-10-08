@@ -13,7 +13,7 @@ Built on **[Wieku/danser-go](https://github.com/Wieku/danser-go)**. This is an u
 - One render workspace with colors, elimination, export, launch options, skin selection, and the complete engine settings editor. Render settings remain in the browser tab session; no saved projects are created.
 - Local skin folders and `.osk` archives, plus manual `.osz` map import when the exact replay map is missing.
 - Rendering queue, progress and logs, cancellation and retry, short video previews, PNG screenshots, and MP4/MKV export.
-- Scenario-first workflow: replay comparison, a single replay, Cursor Dance, autoplay, and classic knockout. Dance and autoplay select a map directly without uploading replays; classic knockout reads the configured replay directory.
+- Scenario-first workflow: replay comparison, a single replay, Cursor Dance, autoplay, and classic knockout. Dance and autoplay select a map directly without uploading replays; classic knockout reads danser's own `replays` directory beside the engine, applies `MaxPlayers` / `ExcludeMods`, and does not use Studio's selected uploads or palette.
 - Recording defaults: NVIDIA H.264 NVENC, preset p4, CQ 22, High profile, 1080p60 MP4, yuv420p, motion blur disabled, and no encoding speed cap. Select libx264 on computers without working NVENC. NVENC preset and quality are available beside the encoder.
 
 The application currently has a **Russian-language interface**. Windows is the tested platform.
@@ -70,6 +70,8 @@ Studio treats lazer as a local reference library. It opens `client.realm` dynami
 The storage root must contain `client.realm` and `files`; the usual Windows location is `%APPDATA%\osu`. Maps are matched by the MD5 recorded in the replay. A newer map with the same title is not substituted for a missing version. No API credentials are required for this local lookup.
 
 Because danser expects a conventional Songs layout, each lazer render creates a temporary directory in the system TEMP folder containing hard links to the selected map and its set's resources. These links refer to the existing data without duplicating file contents. They are removed after completion, failure, or cancellation. A service crash can leave temporary links behind. Across different drives, symbolic links are attempted; if Windows prohibits them, the job fails with an explanation rather than silently copying the files. Refresh the index after moving storage or updating maps.
+
+Lazer does not have ordinary Songs, Skins, or Replays directories: their contents share its hash-based storage. Connect the storage root rather than `files`. The connector currently resolves maps; import skins as `.osk` and replays as exported `.osr`. Lazer's `exports` folder contains files explicitly exported from the game, not every stored replay. Optional stable Songs and local skin directories remain under additional connection settings. The unused native-launcher replay-directory field is not exposed in the web interface.
 
 ## Data and privacy
 
