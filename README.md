@@ -25,15 +25,7 @@ The interface supports **Russian and English**, selectable in the header. Engine
 
 The workspace is arranged around a persistent vinyl stage, with compact replay/map controls on the left and mode, cursor color, and skin controls on the right. Recommended video presets sit in the export dock; detailed encoding, timing, launch, JSON, and engine settings remain available in expandable sections.
 
-Selecting a map loads its background and audio from the filenames in the actual `.osu`, including read-only lazer resources. Music starts only with the play button, at 25% initial volume. Volume, mute, language, and animation preferences stay in the browser tab session. Listening does not change the rendered video's audio. Missing artwork or music leaves the rendering workflow available.
-
-The vinyl grooves, reflections, and rhythm background are authored CSS/SVG. Fonts are bundled locally with their OFL licenses; see [`web/public/ASSETS.md`](web/public/ASSETS.md). The layout targets desktop 16:9 screens and stacks on narrow screens. Animation can be disabled and respects reduced-motion preferences.
-
-## Redesigned workspace
-
-The workspace is arranged around a persistent vinyl stage, with compact replay/map controls on the left and mode, cursor color, and skin controls on the right. Recommended video presets sit in the export dock; detailed encoding, timing, launch, JSON, and engine settings remain available in expandable sections.
-
-Selecting a map loads its background and audio from the filenames in the actual `.osu`, including read-only lazer resources. Music starts only with the play button, at 25% initial volume. Volume, mute, language, and animation preferences stay in the browser tab session. Listening does not change the rendered video's audio. Missing artwork or music leaves the rendering workflow available.
+Selecting a map loads its background and audio from the filenames in the actual `.osu`, including read-only lazer resources. Music starts automatically when a map is selected, using the current volume and mute preferences (25% initially). If the browser blocks autoplay, use the play button. Volume, mute, language, and animation preferences stay in the browser tab session. Listening does not change the rendered video's audio. Missing artwork or music leaves the rendering workflow available.
 
 The vinyl grooves, reflections, and rhythm background are authored CSS/SVG. Fonts are bundled locally with their OFL licenses; see [`web/public/ASSETS.md`](web/public/ASSETS.md). The layout targets desktop 16:9 screens and stacks on narrow screens. Animation can be disabled and respects reduced-motion preferences.
 

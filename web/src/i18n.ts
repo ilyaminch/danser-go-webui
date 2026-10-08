@@ -359,6 +359,8 @@ const english: Record<string, string> = {
   "Карта от": "Mapped by",
   "Приостановить музыку": "Pause music",
   "Слушать карту": "Play map music",
+  "Браузер заблокировал автозапуск. Нажмите «Слушать карту».":
+    "Your browser blocked autoplay. Click Play map music.",
   "Браузер не может воспроизвести этот аудиофайл":
     "The browser cannot play this audio file",
   "Музыка не загружена": "No music loaded",

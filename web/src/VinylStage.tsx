@@ -50,6 +50,23 @@ export function VinylStage({ map }: { map?: MapInfo }) {
     sessionStorage.setItem("studio-music-volume", String(volume));
     sessionStorage.setItem("studio-music-muted", String(muted));
   }, [volume, muted, media.audio]);
+  useEffect(() => {
+    const player = audio.current;
+    if (!media.audio || !player) return;
+    let active = true;
+    player.play().catch((reason) => {
+      if (!active || reason.name === "AbortError") return;
+      setError(
+        reason.name === "NotAllowedError"
+          ? t("Браузер заблокировал автозапуск. Нажмите «Слушать карту».")
+          : t("Браузер не может воспроизвести этот аудиофайл"),
+      );
+    });
+    return () => {
+      active = false;
+      player.pause();
+    };
+  }, [media.audio]);
   const time = (n: number) =>
     `${Math.floor(n / 60)}:${String(Math.floor(n % 60)).padStart(2, "0")}`;
   return (
@@ -116,6 +133,7 @@ export function VinylStage({ map }: { map?: MapInfo }) {
           disabled={!media.audio}
           onClick={async () => {
             if (!audio.current) return;
+            setError("");
             if (playing) audio.current.pause();
             else
               try {

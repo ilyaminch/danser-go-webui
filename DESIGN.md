@@ -224,7 +224,7 @@ The record is procedural CSS, with map artwork clipped under visible grooves; re
 
 The disc rotates once every 24 seconds independently of audio playback. The Animation control pauses that rotation and saves its preference in the tab session. Reduced-motion preference removes animations and transitions. Rails enter with a small upward settling motion over 0.25s.
 
-Music starts through the user's play action. Controls include play/pause, elapsed/duration, seeking, mute, and labeled volume; volume starts at 25% unless a tab-session preference exists. Changing the exact map resets loaded media and playback state. The stage remains mounted when switching the surrounding app section, so section navigation preserves its state. Audio controls disable or explain unavailable resources without inventing content.
+Music starts automatically when selecting a map, respecting the current volume and mute preferences. If browser policy blocks autoplay, the user can start it with the play button. Controls include play/pause, elapsed/duration, seeking, mute, and labeled volume; volume starts at 25% unless a tab-session preference exists. Changing the exact map resets loaded media and playback state. The stage remains mounted when switching the surrounding app section, so section navigation preserves its state. Audio controls disable or explain unavailable resources without inventing content.
 
 ### Export Dock
 
@@ -244,6 +244,6 @@ Recommended resolution/frame-rate presets remain a compact select. Detailed enco
 - **Don't** introduce a retro, overly pastel, or acidic palette.
 - **Don't** replace the working rails with a repeated card or glass template.
 - **Don't** fabricate map art, replay results, players, dates, or readiness states.
-- **Don't** start loud or automatic music playback when a map is selected.
+- **Do** start music when a map is selected, respecting saved volume and mute; offer manual play when the browser blocks autoplay.
 - **Don't** substitute another map version with the same title or hide its difficulty identity.
 - **Don't** bundle local map media or rely on external font servers.
