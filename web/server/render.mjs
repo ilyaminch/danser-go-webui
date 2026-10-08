@@ -223,7 +223,13 @@ export function buildArguments(
     "hp",
   ];
   for (const field of fields)
-    if (project.launch[field] != null)
+    if (
+      project.launch[field] != null &&
+      !(
+        project.kind === "comparison" &&
+        ["cs", "ar", "od", "hp"].includes(field)
+      )
+    )
       args.push(`-${field}`, String(project.launch[field]));
   for (const field of ["skip", "quickstart", "debug", "gldebug"])
     if (project.launch[field]) args.push(`-${field}`);

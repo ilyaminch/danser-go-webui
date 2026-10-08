@@ -70,6 +70,18 @@ test("one uploaded attempt uses the same explicit manifest workflow as a batch",
   assert.ok(args.includes("-studio-manifest"));
   assert.ok(!args.includes("-replay"));
 });
+test("replay video ignores saved difficulty overrides while map visualization applies them", () => {
+  for (const kind of ["comparison", "dance", "autoplay"]) {
+    const p = { ...project(), kind, launch: { cs: 10, ar: 10, od: 8, hp: 7 } };
+    const args = buildArguments(p, "settings", "manifest", [], "out", "record");
+    for (const key of ["cs", "ar", "od", "hp"]) {
+      if (kind === "comparison") assert.ok(!args.includes(`-${key}`));
+      else
+        assert.equal(args[args.indexOf(`-${key}`) + 1], String(p.launch[key]));
+    }
+    assert.deepEqual(p.launch, { cs: 10, ar: 10, od: 8, hp: 7 });
+  }
+});
 test("web rendering rejects interactive play and native-window actions", async () => {
   assert.throws(
     () => validateProject({ ...project(), kind: "classic" }, store),
