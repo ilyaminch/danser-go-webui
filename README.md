@@ -4,15 +4,20 @@ A local web interface for comparing osu!standard replays and rendering them into
 
 Built on **[Wieku/danser-go](https://github.com/Wieku/danser-go)**. This is an unofficial companion project with a modified copy of the engine, not an official danser-go release. The vendored engine is based on upstream commit `2fc4c8931ff4446a411b0094d7d7b4ede82c61c4` and retains its original documentation and credits in [`danser-go/`](danser-go/README.md).
 
+**Version 0.2.0** is the functional baseline before the frontend redesign. It remains an early working release with the setup requirements and limitations documented below. The `v0.2.0` Git tag preserves this version.
+
 ## Features
 
-- Batch `.osr` import, duplicate detection, player/date/map filters, and replay groups.
+- Batch `.osr` import, duplicate detection, player/date filters, and replay groups.
 - Arbitrary color gradients ordered by replay date, per-player gradients, player colors, and manual overrides. Colors remain attached to the same replay when the engine sorts players or eliminates them.
 - All five native comparison modes: Combo Break, Max Combo, Replay Showcase, Vs Mode, and SS or Quit. Configure the minimum number of surviving players, initial grace period, revival, sorting, and the additional danser cursor.
 - Local maps from osu!stable Songs folders or osu!lazer storage. Replay imports and selections resolve the exact map using its MD5 hash.
-- Saved projects, project/settings JSON import and export, an engine settings editor, and a separate credentials panel.
+- One render workspace with colors, elimination, export, launch options, skin selection, and the complete engine settings editor. Render settings remain in the browser tab session; no saved projects are created.
+- Local skin folders and `.osk` archives, plus manual `.osz` map import when the exact replay map is missing.
 - Rendering queue, progress and logs, cancellation and retry, short video previews, PNG screenshots, and MP4/MKV export.
-- Single replay, cursor dance, autoplay, classic knockout, and native interactive play scenarios.
+- Two scenarios selected by a switch: **Replay video** accepts one or more attempts of the same map; **Map visualization** offers Cursor Dance or autoplay with the gameplay interface, without replay uploads. A single attempt uses the same manifest workflow and danser automatically shows its score/combo interface. Classic folder knockout is not exposed.
+- CS, AR, OD, and HP overrides are available only for map visualization. Replay video preserves the map difficulty and each attempt's recorded mods, including Difficulty Adjust; saved visualization overrides are ignored for replay rendering.
+- Recording defaults: NVIDIA H.264 NVENC, preset p4, CQ 22, High profile, 1080p60 MP4, yuv420p, motion blur disabled, and no encoding speed cap. Select libx264 on computers without working NVENC. NVENC preset and quality are available beside the encoder.
 
 The application currently has a **Russian-language interface**. Windows is the tested platform.
 
@@ -55,11 +60,15 @@ Alternatively, start the built service using `npm start` from `web`. For fronten
 
 ## First video
 
-1. Open **Settings → Connection** (`Настройки → Подключение`). Configure FFmpeg and either a stable Songs directory or a lazer storage root. The bundled Studio executable is detected automatically when present.
-2. For lazer, use **Find on this computer** (`Найти на компьютере`) and **Connect and refresh index** (`Подключить и обновить индекс`). A Songs directory is optional in this case. For stable, save the paths and refresh maps.
-3. Drop `.osr` files into the replay library or import a folder. Select attempts of **one map** for a scene.
+1. Open **Connection** (`Подключение`). Configure FFmpeg and either a stable Songs directory or a lazer storage root. The bundled Studio executable is detected automatically when present.
+2. For lazer, use **Find on this computer** (`Найти на компьютере`) and **Connect and refresh index** (`Подключить и обновить индекс`). A Songs directory is optional in this case. For stable, save the paths; importing replays looks up the map automatically.
+3. Drop `.osr` files into **Create video** or import a folder. All attempts must belong to **one exact map version**; mixed-map batches are rejected without importing any files. Attempts are selected automatically.
 4. Choose a palette and comparison mode. Replay Showcase keeps attempts visible; Combo Break eliminates them on a combo break. Setting the minimum surviving players to zero allows every attempt to be eliminated.
-5. Save the project, render a short preview, and create the video. Outputs and logs appear in the rendering queue.
+5. Optionally render a short preview, then create the video. Outputs and logs appear in the rendering queue. After successful full video creation, uploaded replay copies are deleted once queued jobs finish using them. Settings stay available for the next video within the same browser tab session.
+
+To render without replays, turn on **Map visualization** (`Визуализация карты`), select Cursor Dance or Autoplay, and choose a locally indexed map or import a `.osz` archive. Cursor Dance generates automatic cursor movement; Autoplay uses the engine's automatic player and gameplay interface. Configure export settings and optionally preview before rendering.
+
+In map visualization, **CS** controls circle size (higher means smaller circles), **AR** controls how early objects appear (higher means less reading time), **OD** controls hit timing strictness, and **HP** controls health drain difficulty. Blank fields retain the map's values with the selected mods. These fields are hidden for replay video because the native comparison workflow does not apply launch-time difficulty overrides.
 
 ## How lazer storage is used
 
@@ -69,11 +78,15 @@ The storage root must contain `client.realm` and `files`; the usual Windows loca
 
 Because danser expects a conventional Songs layout, each lazer render creates a temporary directory in the system TEMP folder containing hard links to the selected map and its set's resources. These links refer to the existing data without duplicating file contents. They are removed after completion, failure, or cancellation. A service crash can leave temporary links behind. Across different drives, symbolic links are attempted; if Windows prohibits them, the job fails with an explanation rather than silently copying the files. Refresh the index after moving storage or updating maps.
 
+Lazer does not have ordinary Songs, Skins, or Replays directories: their contents share its hash-based storage. Connect the storage root rather than `files`. The connector currently resolves maps; import skins as `.osk` and replays as exported `.osr`. Lazer's `exports` folder contains files explicitly exported from the game, not every stored replay. Optional stable Songs and local skin directories remain under additional connection settings. The unused native-launcher replay-directory field is not exposed in the web interface.
+
 ## Data and privacy
 
-The service binds to `127.0.0.1` and processes imports locally. Imported replays are copied into `web/data/library`; the original replay files are not moved. Projects, map indexes, and jobs are stored in `web/data/studio.sqlite`. Videos use the configured output directory. These paths are ignored by Git.
+The service binds to `127.0.0.1` and processes imports locally. Replay copies in `web/data/library` are temporary: a successful full render releases its selected copies after other queued jobs finish using them. Preview, failure, or cancellation alone does not delete replays. Original files are never moved or deleted. **New render** clears uploaded copies while retaining settings, and is unavailable until pending jobs finish.
 
-Project JSON contains replay identifiers and settings, not the replay files themselves. Import the corresponding files separately when transferring a project to another computer. API secrets are stored in the engine's `settings/credentials.json` and are excluded from project exports. The engine may contact osu! services for features that use online data.
+Render settings are kept in browser `sessionStorage`, survive page refreshes, and are not saved as projects. Jobs retain a settings snapshot while queued or retryable; when their replays are cleaned, that snapshot and retry are removed. Engine settings and job manifests are removed after every job. Completed videos, job logs, map indexes, local connection paths, and imported map/skin assets remain available. Imported `.osk` files are unpacked into a managed skin directory; external skin folders are referenced directly.
+
+API secrets are stored separately in the engine's `settings/credentials.json`. The engine may contact osu! services for features that use online data. User data, videos, and managed assets are excluded from Git. Data left by older versions is not automatically purged on upgrade; use **New render** to clear old replay copies.
 
 ## Development and validation
 
@@ -90,6 +103,7 @@ With the engine, resources, FFmpeg, and ffprobe installed:
 ```powershell
 cd web
 node test/integration.mjs
+node test/integration.mjs --manual
 node test/lazer-integration.mjs "C:\path\to\lazer-storage"
 ```
 
@@ -112,13 +126,19 @@ The server accepts `PORT` and `STUDIO_DATA_DIR` for an isolated instance. Engine
 
 Local development notes and temporary screenshots are kept in `.local-work/`, which is excluded from the repository.
 
+## Development workflow
+
+`main` contains released versions; `develop` is the integration branch. Start feature and ordinary fix branches from an up-to-date `develop`, review changes against it, and integrate with merge commits. Prepare releases on `release/<version>`, merge them into `main` and back into `develop`, and tag the released commit. Completed branches can then be deleted without removing their commit history. Use Conventional Commits with concise English descriptions.
+
+The frontend redesign will build on this baseline. Runtime builds, local replays, imported archives, databases, credentials, and generated media must stay outside version control.
+
 ## Current limitations
 
 - Early working version; there is no full installer or automatic map download.
 - One map per scene; multiple-map video editing and render pause are not implemented.
-- Live engine playback uses a native window, not an embedded browser renderer.
+- The web interface provides video previews and screenshots. Interactive play and native window playback are not exposed through its API.
 - The settings editor exposes the current Go configuration schema. Some labels remain in English, complex arrays use JSON, dynamic choices need manual input, and visibility conditions are shown as hints.
-- Project controls override the corresponding engine JSON values when a job starts. Fixed comparison palettes disable cursor rainbow and beat flashes.
+- Main render controls override the corresponding engine JSON values when a job starts. Fixed comparison palettes disable cursor rainbow and beat flashes.
 - Browser video playback depends on the selected codec; MP4/H.264/AAC is the usual interoperable choice.
 - Real lazer replay/mod combinations still need broader validation. Matching a map does not by itself guarantee perfect playback compatibility.
 - Linux packaging has not been tested; macOS is not supported by upstream danser-go.
