@@ -93,6 +93,7 @@ With the engine, resources, FFmpeg, and ffprobe installed:
 ```powershell
 cd web
 node test/integration.mjs
+node test/integration.mjs --manual
 node test/lazer-integration.mjs "C:\path\to\lazer-storage"
 ```
 

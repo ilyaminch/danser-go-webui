@@ -471,7 +471,7 @@ export function createRenderer(store, dataDir) {
         outputBase,
         job.action,
       );
-      if (map.source === "lazer") {
+      if (map.source === "lazer" || map.source === "manual") {
         const skip = args.indexOf("-nodbcheck");
         if (skip >= 0) args.splice(skip, 1);
       }
@@ -512,6 +512,10 @@ export function createRenderer(store, dataDir) {
         );
       });
       if (active.cancelled) throw new Error("Отменено");
+      if (job.log.includes("Beatmap not found, closing"))
+        throw new Error(
+          "Движок не нашёл точную карту из реплея. Проверьте источник карты или импортируйте нужную версию .osz.",
+        );
       // Danser stores screenshots in DataDir/screenshots, regardless of Recording.OutputDir.
       if (job.action === "screenshot")
         await copyFile(
@@ -523,7 +527,16 @@ export function createRenderer(store, dataDir) {
           outputFile,
         );
       if (job.action !== "watch") {
-        const info = await stat(outputFile);
+        let info;
+        try {
+          info = await stat(outputFile);
+        } catch (error) {
+          if (error.code === "ENOENT")
+            throw new Error(
+              "Движок завершился без создания видео или снимка. Подробности — в журнале задания.",
+            );
+          throw error;
+        }
         if (info.size < 32)
           throw new Error("Движок не создал корректный выходной файл");
         if (job.action !== "screenshot") {

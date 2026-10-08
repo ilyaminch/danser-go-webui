@@ -192,7 +192,13 @@ export async function resolveMap(store, hash) {
 export async function prepareMapView(store, map, config) {
   if (map.source !== "lazer")
     return {
-      songsDir: map.sourceRoot || config.songsDir,
+      // Manual .osz files are extracted into one set folder. Danser ignores
+      // .osu files directly in Songs, so it must scan the parent of that set.
+      // Keep this compatible with map records imported by earlier versions.
+      songsDir:
+        map.source === "manual"
+          ? path.dirname(map.sourceRoot)
+          : map.sourceRoot || config.songsDir,
       cleanup: async () => {},
     };
   const set = store.get("lazer-set", map.setKey);

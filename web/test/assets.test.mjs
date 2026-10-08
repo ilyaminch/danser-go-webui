@@ -18,6 +18,7 @@ import {
   selectedSkin,
 } from "../server/assets.mjs";
 import { openStore } from "../server/store.mjs";
+import { prepareMapView } from "../server/lazer.mjs";
 
 import { zip } from "./archive-fixture.mjs";
 
@@ -105,6 +106,13 @@ test("manual map archive retains music beside the exact map", async () => {
     assert.equal(result.maps.length, 1);
     const map = store.get("map", result.maps[0].hash);
     assert.equal(map.source, "manual");
+    const view = await prepareMapView(store, map, { songsDir: "" });
+    assert.equal(view.songsDir, path.join(root, "maps"));
+    assert.notEqual(
+      view.songsDir,
+      path.dirname(map.path),
+      "Danser skips .osu files at its Songs root",
+    );
     assert.equal(
       await readFile(path.join(path.dirname(map.path), "song.mp3"), "utf8"),
       "music",

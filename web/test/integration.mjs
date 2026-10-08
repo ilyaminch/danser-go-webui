@@ -10,6 +10,7 @@ const root = path.resolve(".."),
   testDir = path.resolve("data/integration", String(Date.now())),
   port = 3105;
 const testFFmpeg = process.env.STUDIO_TEST_FFMPEG || "ffmpeg";
+const manual = process.argv.includes("--manual");
 if (path.isAbsolute(testFFmpeg))
   process.env.PATH =
     path.dirname(testFFmpeg) + path.delimiter + (process.env.PATH || "");
@@ -67,7 +68,7 @@ try {
   assert.equal(rejected.status, 403);
   await request("/config", "PUT", {
     enginePath: path.join(root, "runtime/danser-studio.exe"),
-    songsDir: fixture.songs,
+    songsDir: manual ? "" : fixture.songs,
     ffmpegPath: testFFmpeg,
     outputDir: path.join(testDir, "videos"),
     skinsDir: "",
@@ -75,9 +76,34 @@ try {
   });
   const health = await request("/health");
   assert.ok(
-    health.engine && health.studio && health.ffmpeg && health.songs,
+    health.engine && health.studio && health.ffmpeg && health.songs === !manual,
     JSON.stringify(health),
   );
+  if (manual) {
+    const archive = new FormData();
+    archive.append(
+      "file",
+      new Blob([
+        zip([
+          [
+            "training.osu",
+            await readFile(
+              path.join(fixture.songs, "Studio Test", "training.osu"),
+            ),
+          ],
+          [
+            "song.wav",
+            await readFile(path.join(fixture.songs, "Studio Test", "song.wav")),
+          ],
+        ]),
+      ]),
+      "training.osz",
+    );
+    assert.equal(
+      (await request("/maps/import", "POST", archive)).maps.length,
+      1,
+    );
+  }
   // Import resolves stable Songs without visiting a separate map index screen.
   const form = new FormData();
   for (const name of ["old.osr", "new.osr"])
@@ -117,7 +143,7 @@ try {
     1,
   );
   const project = {
-    name: "Studio training test",
+    name: manual ? "Прогресс тренировок" : "Studio training test",
     kind: "comparison",
     mapHash: fixture.hash,
     replayIds: imported.imported.map((r) => r.id),
@@ -155,6 +181,7 @@ try {
       end: 7,
       screenshotTime: 3.5,
       noUpdateCheck: true,
+      noDbCheck: manual,
     },
     configPatch: {
       General: { DiscordPresenceOn: false },
@@ -258,6 +285,7 @@ try {
   const record = all.find((j) => j.id === first.id),
     screenshot = all.find((j) => j.id === second.id),
     late = all.find((j) => j.id === third.id);
+  if (manual) assert.ok(!record.args.includes("-nodbcheck"));
   assert.equal(
     [...record.log.matchAll(/has broken! Max combo:/g)].length,
     1,
