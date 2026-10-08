@@ -4,6 +4,8 @@ A local web interface for comparing osu!standard replays and rendering them into
 
 Built on **[Wieku/danser-go](https://github.com/Wieku/danser-go)**. This is an unofficial companion project with a modified copy of the engine, not an official danser-go release. The vendored engine is based on upstream commit `2fc4c8931ff4446a411b0094d7d7b4ede82c61c4` and retains its original documentation and credits in [`danser-go/`](danser-go/README.md).
 
+**Version 0.2.0** is the functional baseline before the frontend redesign. It remains an early working release with the setup requirements and limitations documented below. The `v0.2.0` Git tag preserves this version.
+
 ## Features
 
 - Batch `.osr` import, duplicate detection, player/date filters, and replay groups.
@@ -14,6 +16,7 @@ Built on **[Wieku/danser-go](https://github.com/Wieku/danser-go)**. This is an u
 - Local skin folders and `.osk` archives, plus manual `.osz` map import when the exact replay map is missing.
 - Rendering queue, progress and logs, cancellation and retry, short video previews, PNG screenshots, and MP4/MKV export.
 - Two scenarios selected by a switch: **Replay video** accepts one or more attempts of the same map; **Map visualization** offers Cursor Dance or autoplay with the gameplay interface, without replay uploads. A single attempt uses the same manifest workflow and danser automatically shows its score/combo interface. Classic folder knockout is not exposed.
+- CS, AR, OD, and HP overrides are available only for map visualization. Replay video preserves the map difficulty and each attempt's recorded mods, including Difficulty Adjust; saved visualization overrides are ignored for replay rendering.
 - Recording defaults: NVIDIA H.264 NVENC, preset p4, CQ 22, High profile, 1080p60 MP4, yuv420p, motion blur disabled, and no encoding speed cap. Select libx264 on computers without working NVENC. NVENC preset and quality are available beside the encoder.
 
 The application currently has a **Russian-language interface**. Windows is the tested platform.
@@ -62,6 +65,10 @@ Alternatively, start the built service using `npm start` from `web`. For fronten
 3. Drop `.osr` files into **Create video** or import a folder. All attempts must belong to **one exact map version**; mixed-map batches are rejected without importing any files. Attempts are selected automatically.
 4. Choose a palette and comparison mode. Replay Showcase keeps attempts visible; Combo Break eliminates them on a combo break. Setting the minimum surviving players to zero allows every attempt to be eliminated.
 5. Optionally render a short preview, then create the video. Outputs and logs appear in the rendering queue. After successful full video creation, uploaded replay copies are deleted once queued jobs finish using them. Settings stay available for the next video within the same browser tab session.
+
+To render without replays, turn on **Map visualization** (`Визуализация карты`), select Cursor Dance or Autoplay, and choose a locally indexed map or import a `.osz` archive. Cursor Dance generates automatic cursor movement; Autoplay uses the engine's automatic player and gameplay interface. Configure export settings and optionally preview before rendering.
+
+In map visualization, **CS** controls circle size (higher means smaller circles), **AR** controls how early objects appear (higher means less reading time), **OD** controls hit timing strictness, and **HP** controls health drain difficulty. Blank fields retain the map's values with the selected mods. These fields are hidden for replay video because the native comparison workflow does not apply launch-time difficulty overrides.
 
 ## How lazer storage is used
 
@@ -118,6 +125,12 @@ The server accepts `PORT` and `STUDIO_DATA_DIR` for an isolated instance. Engine
 | `Start-Studio.*` | Windows startup scripts |
 
 Local development notes and temporary screenshots are kept in `.local-work/`, which is excluded from the repository.
+
+## Development workflow
+
+`main` contains released versions; `develop` is the integration branch. Start feature and ordinary fix branches from an up-to-date `develop`, review changes against it, and integrate with merge commits. Prepare releases on `release/<version>`, merge them into `main` and back into `develop`, and tag the released commit. Completed branches can then be deleted without removing their commit history. Use Conventional Commits with concise English descriptions.
+
+The frontend redesign will build on this baseline. Runtime builds, local replays, imported archives, databases, credentials, and generated media must stay outside version control.
 
 ## Current limitations
 
