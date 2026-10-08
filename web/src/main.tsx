@@ -100,7 +100,7 @@ const freshProject = (): Project => ({
     width: 1920,
     height: 1080,
     fps: 60,
-    encoder: "libx264",
+    encoder: "h264_nvenc",
     container: "mp4",
   },
   launch: {
@@ -115,7 +115,14 @@ const freshProject = (): Project => ({
     noUpdateCheck: true,
     noDbCheck: false,
   },
-  configPatch: {},
+  configPatch: {
+    Recording: {
+      EncodingFPSCap: 0,
+      PixelFormat: "yuv420p",
+      MotionBlur: { Enabled: false },
+      h264_nvenc: { RateControl: "cq", CQ: 22, Profile: "high", Preset: "p4" },
+    },
+  },
 });
 const labels: Record<string, string> = {
   General: "Общие",
@@ -168,6 +175,23 @@ function App() {
           ? {
               ...freshProject(),
               ...JSON.parse(saved),
+              kind:
+                JSON.parse(saved).kind === "play"
+                  ? "comparison"
+                  : JSON.parse(saved).kind,
+              ...(sessionStorage.getItem("studio-recording-defaults") !==
+              "nvenc-p4-v1"
+                ? {
+                    export: { ...freshProject().export },
+                    configPatch: {
+                      ...JSON.parse(saved).configPatch,
+                      Recording: {
+                        ...JSON.parse(saved).configPatch?.Recording,
+                        ...freshProject().configPatch.Recording,
+                      },
+                    },
+                  }
+                : {}),
               replayIds: [],
               mapHash: "",
             }
@@ -202,6 +226,7 @@ function App() {
   useEffect(() => {
     const { id, replayIds, mapHash, ...settings } = project;
     sessionStorage.setItem("studio-render-settings", JSON.stringify(settings));
+    sessionStorage.setItem("studio-recording-defaults", "nvenc-p4-v1");
   }, [project]);
   const fileRef = useRef<HTMLInputElement>(null),
     mapRef = useRef<HTMLInputElement>(null),
@@ -215,7 +240,15 @@ function App() {
       const ids = p.replayIds.filter((id) =>
         s.replays.some((r: Replay) => r.id === id),
       );
-      return { ...p, replayIds: ids, mapHash: ids.length ? p.mapHash : "" };
+      return {
+        ...p,
+        replayIds: ids,
+        mapHash: ["comparison", "replay"].includes(p.kind)
+          ? ids.length
+            ? p.mapHash
+            : ""
+          : p.mapHash,
+      };
     });
     return s;
   };
@@ -226,10 +259,13 @@ function App() {
         if (s.replays.length)
           setProject((p) => ({
             ...p,
-            mapHash: s.replays[0].mapHash,
+            mapHash: ["comparison", "replay"].includes(p.kind)
+              ? s.replays[0].mapHash
+              : p.mapHash,
             replayIds: s.replays
               .filter((r: Replay) => r.mapHash === s.replays[0].mapHash)
-              .map((r: Replay) => r.id),
+              .map((r: Replay) => r.id)
+              .slice(0, p.kind === "replay" ? 1 : s.replays.length),
           }));
       })
       .catch((e) => setNotice({ text: e.message, error: true }));
@@ -273,6 +309,21 @@ function App() {
     setProject((p) => ({ ...p, palette: { ...p.palette, [key]: value } }));
   const updateExport = (key: string, value: any) =>
     setProject((p) => ({ ...p, export: { ...p.export, [key]: value } }));
+  const usesReplays = ["comparison", "replay"].includes(project.kind);
+  const multiReplay = ["comparison", "classic"].includes(project.kind);
+  const scenarioChange = (kind: string) => {
+    setProject((p) => ({
+      ...p,
+      kind,
+      mapHash: ["comparison", "replay"].includes(kind)
+        ? (state.replays.find((r) => p.replayIds.includes(r.id))?.mapHash ?? "")
+        : p.mapHash,
+      replayIds: kind === "replay" ? p.replayIds.slice(0, 1) : p.replayIds,
+      launch:
+        kind === "comparison" ? { ...p.launch, mods: "", mods2: "" } : p.launch,
+    }));
+    setSection("Cursor");
+  };
   const selected = state.replays.filter((r) =>
     project.replayIds.includes(r.id),
   );
@@ -315,7 +366,9 @@ function App() {
     }
     patch({
       replayIds: checked
-        ? [...project.replayIds, r.id]
+        ? project.kind === "replay"
+          ? [r.id]
+          : [...project.replayIds, r.id]
         : project.replayIds.filter((id) => id !== r.id),
       ...(checked ? { mapHash: r.mapHash } : {}),
     });
@@ -329,6 +382,10 @@ function App() {
     const hash = project.mapHash || visible[0]?.mapHash;
     if (!hash) return;
     const same = visible.filter((r) => r.mapHash === hash);
+    if (project.kind === "replay") {
+      patch({ mapHash: hash, replayIds: same.slice(0, 1).map((r) => r.id) });
+      return;
+    }
     patch({
       mapHash: hash,
       replayIds: [...new Set([...project.replayIds, ...same.map((r) => r.id)])],
@@ -340,7 +397,9 @@ function App() {
       setProject((p) => ({
         ...p,
         mapHash: s.replays[0].mapHash,
-        replayIds: s.replays.map((r: Replay) => r.id),
+        replayIds: s.replays
+          .map((r: Replay) => r.id)
+          .slice(0, p.kind === "replay" ? 1 : s.replays.length),
       }));
     setNotice({
       text: `Добавлено: ${result.imported.length}. Дубликатов: ${result.duplicates.length}.${result.errors.length ? " Ошибки: " + result.errors.map((e: any) => `${e.file}: ${e.error}`).join("; ") : ""}${result.mapErrors?.length ? " Карты не найдены для " + result.mapErrors.length + " подборок. Настройте Songs или lazer." : ""}`,
@@ -355,7 +414,13 @@ function App() {
     });
   const run = (action: string) =>
     perform("Проверяем и запускаем…", async () => {
-      await api("/jobs", "POST", { project, action });
+      await api("/jobs", "POST", {
+        project: {
+          ...project,
+          replayIds: usesReplays ? project.replayIds : [],
+        },
+        action,
+      });
       setPage("queue");
       await refresh();
     });
@@ -621,24 +686,14 @@ function App() {
             </span>
             <button
               className="button ghost small"
-              disabled={
-                !!busy ||
-                !engineReady ||
-                !health?.ffmpeg ||
-                project.kind === "play"
-              }
+              disabled={!!busy || !engineReady || !health?.ffmpeg}
               onClick={() => run("preview")}
             >
               Превью
             </button>
             <button
               className="button primary small"
-              disabled={
-                !!busy ||
-                !engineReady ||
-                !health?.ffmpeg ||
-                project.kind === "play"
-              }
+              disabled={!!busy || !engineReady || !health?.ffmpeg}
               onClick={() => run("record")}
             >
               Создать видео
@@ -690,368 +745,420 @@ function App() {
                     </p>
                   </div>
                 </div>
-                <div
-                  className={`import-zone ${dragging ? "dragging" : ""}`}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setDragging(true);
-                  }}
-                  onDragLeave={() => setDragging(false)}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    setDragging(false);
-                    void importReplays(e.dataTransfer.files);
-                  }}
-                >
-                  <div className="upload-symbol">
-                    <Upload size={22} />
-                  </div>
-                  <div>
-                    <h3>Перетащите сюда свои реплеи</h3>
-                    <p>Несколько файлов .osr · ваши попытки и реплеи друзей</p>
-                  </div>
-                  <button
-                    className="button ghost"
-                    disabled={!!busy}
-                    onClick={() => fileRef.current?.click()}
-                  >
-                    <Plus size={16} />
-                    Выбрать файлы
-                  </button>
-                  <input
-                    hidden
-                    ref={fileRef}
-                    type="file"
-                    multiple
-                    accept=".osr"
-                    onChange={(e) => {
-                      if (e.target.files) void importReplays(e.target.files);
-                      e.target.value = "";
-                    }}
-                  />
-                </div>
-                {new Set(state.replays.map((r) => r.mapHash)).size > 1 && (
-                  <p className="note warning">
-                    Остались загрузки разных карт из прежней библиотеки.
-                    Выберите попытки одной карты или нажмите «Новый рендер»,
-                    чтобы очистить старые загрузки.
-                  </p>
-                )}
-                <div className="library-heading">
-                  <div>
-                    <h2>
-                      Попытки для видео <span>{state.replays.length}</span>
-                    </h2>
-                    <p>Дата игры берётся из реплея, а не из имени файла.</p>
-                  </div>
-                  <button
-                    className="text-button"
-                    onClick={() => setShowFolder((v) => !v)}
-                  >
-                    <FolderOpen size={15} />
-                    Импорт папки
-                  </button>
-                </div>
-                {showFolder && (
-                  <div className="folder-import">
-                    <input
-                      placeholder="D:\\osu!\\Replays"
-                      value={folder}
-                      onChange={(e) => setFolder(e.target.value)}
-                    />
-                    <button
-                      className="button ghost"
-                      disabled={!!busy}
-                      onClick={() =>
-                        perform("Импортируем папку…", async () =>
-                          importResult(
-                            await api("/import-folder", "POST", {
-                              path: folder,
-                            }),
-                          ),
-                        )
-                      }
-                    >
-                      Импортировать
-                    </button>
-                  </div>
-                )}
-                <div className="filters">
-                  <div className="search">
-                    <Search size={17} />
-                    <input
-                      aria-label="Поиск реплеев"
-                      placeholder="Игрок, карта или имя файла…"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                    />
-                  </div>
-                  <select
-                    aria-label="Фильтр игроков"
-                    value={playerFilter}
-                    onChange={(e) => setPlayerFilter(e.target.value)}
-                  >
-                    <option value="">Все игроки</option>
-                    {players.map((p) => (
-                      <option key={p}>{p}</option>
-                    ))}
-                  </select>
-                  <select
-                    aria-label="Сортировка"
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value)}
-                  >
-                    <option value="new">Сначала новые</option>
-                    <option value="old">Сначала старые</option>
-                    <option value="score">По счёту</option>
-                  </select>
-                </div>
-                <div className="date-filters">
-                  <Clock3 size={14} />
-                  <span>Период</span>
-                  <input
-                    aria-label="Дата начала"
-                    type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                  />
-                  <span>—</span>
-                  <input
-                    aria-label="Дата конца"
-                    type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                  />
-                  {groups.length > 0 && (
+                <section className="workflow-card">
+                  <h2>Сценарий видео</h2>
+                  <FieldLabel label="Что создать">
                     <select
-                      aria-label="Группа"
-                      value={groupFilter}
-                      onChange={(e) => setGroupFilter(e.target.value)}
+                      value={project.kind}
+                      onChange={(e) => scenarioChange(e.target.value)}
                     >
-                      <option value="">Все группы</option>
-                      {groups.map((g) => (
-                        <option key={g}>{g}</option>
-                      ))}
+                      <option value="comparison">Сравнение реплеев</option>
+                      <option value="replay">Один реплей</option>
+                      <option value="dance">Cursor Dance</option>
+                      <option value="autoplay">Autoplay с replay UI</option>
+                      <option value="classic">Классический knockout</option>
                     </select>
-                  )}
-                  <button
-                    className="text-button"
-                    onClick={() => {
-                      setDateFrom("");
-                      setDateTo("");
-                      setMapFilter("");
-                      setPlayerFilter("");
-                      setSearch("");
-                      setGroupFilter("");
-                    }}
-                  >
-                    Сбросить
-                  </button>
-                </div>
-                <div className="selection-bar">
-                  <span>
-                    <b>{selected.length}</b> выбрано для видео{" "}
-                    {selected.length > 0 && <small>· одна карта</small>}
-                  </span>
-                  <div>
-                    <button className="text-button" onClick={selectAll}>
-                      Выбрать все попытки
-                    </button>
-                    <button
-                      className="text-button"
-                      onClick={() => patch({ replayIds: [] })}
+                  </FieldLabel>
+                  <p className="note">
+                    {usesReplays
+                      ? "Загрузите попытки одной карты. Для одиночного видео выберите одну попытку."
+                      : project.kind === "classic"
+                        ? "Движок берёт реплеи выбранной карты из настроенной папки реплеев. Выделение попыток и градиент здесь не применяются."
+                        : "Выберите карту ниже. Реплеи для этого сценария не нужны."}
+                  </p>
+                </section>
+                {usesReplays && (
+                  <>
+                    <div
+                      className={`import-zone ${dragging ? "dragging" : ""}`}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragging(true);
+                      }}
+                      onDragLeave={() => setDragging(false)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragging(false);
+                        void importReplays(e.dataTransfer.files);
+                      }}
                     >
-                      Снять выбор
-                    </button>
-                  </div>
-                </div>
-                <div className="table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th></th>
-                        <th>Игрок / попытка</th>
-                        <th>Дата игры</th>
-                        <th>Точность</th>
-                        <th>Комбо</th>
-                        <th>Промахи</th>
-                        <th>Цвет</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {visible.map((r) => (
-                        <tr
-                          key={r.id}
-                          className={
-                            project.replayIds.includes(r.id) ? "selected" : ""
+                      <div className="upload-symbol">
+                        <Upload size={22} />
+                      </div>
+                      <div>
+                        <h3>Перетащите сюда свои реплеи</h3>
+                        <p>
+                          Несколько файлов .osr · ваши попытки и реплеи друзей
+                        </p>
+                      </div>
+                      <button
+                        className="button ghost"
+                        disabled={!!busy}
+                        onClick={() => fileRef.current?.click()}
+                      >
+                        <Plus size={16} />
+                        Выбрать файлы
+                      </button>
+                      <input
+                        hidden
+                        ref={fileRef}
+                        type="file"
+                        multiple
+                        accept=".osr"
+                        onChange={(e) => {
+                          if (e.target.files)
+                            void importReplays(e.target.files);
+                          e.target.value = "";
+                        }}
+                      />
+                    </div>
+                    {new Set(state.replays.map((r) => r.mapHash)).size > 1 && (
+                      <p className="note warning">
+                        Остались загрузки разных карт из прежней библиотеки.
+                        Выберите попытки одной карты или нажмите «Новый рендер»,
+                        чтобы очистить старые загрузки.
+                      </p>
+                    )}
+                    <div className="library-heading">
+                      <div>
+                        <h2>
+                          Попытки для видео <span>{state.replays.length}</span>
+                        </h2>
+                        <p>Дата игры берётся из реплея, а не из имени файла.</p>
+                      </div>
+                      <button
+                        className="text-button"
+                        onClick={() => setShowFolder((v) => !v)}
+                      >
+                        <FolderOpen size={15} />
+                        Импорт папки
+                      </button>
+                    </div>
+                    {showFolder && (
+                      <div className="folder-import">
+                        <input
+                          placeholder="D:\\osu!\\Replays"
+                          value={folder}
+                          onChange={(e) => setFolder(e.target.value)}
+                        />
+                        <button
+                          className="button ghost"
+                          disabled={!!busy}
+                          onClick={() =>
+                            perform("Импортируем папку…", async () =>
+                              importResult(
+                                await api("/import-folder", "POST", {
+                                  path: folder,
+                                }),
+                              ),
+                            )
                           }
                         >
-                          <td>
-                            <input
-                              aria-label={`Выбрать ${r.filename}`}
-                              type="checkbox"
-                              checked={project.replayIds.includes(r.id)}
-                              onChange={(e) =>
-                                chooseReplay(r, e.target.checked)
-                              }
-                            />
-                          </td>
-                          <td>
-                            <div className="player-cell">
-                              <div className="avatar">
-                                {r.player.slice(0, 2).toUpperCase()}
-                              </div>
-                              <div>
-                                <b>{r.player}</b>
-                                <small title={r.filename}>
-                                  {r.modList.join(" ") || "No Mod"}{" "}
-                                  <span>· {r.source}</span>
-                                </small>
-                              </div>
-                            </div>
-                            <input
-                              className="group-input"
-                              aria-label={`Группа ${r.filename}`}
-                              defaultValue={r.group}
-                              placeholder="Добавить группу"
-                              onBlur={(e) => {
-                                if (e.target.value !== r.group)
-                                  perform("Сохраняем группу…", async () => {
-                                    await api("/replays/" + r.id, "PATCH", {
-                                      group: e.target.value,
-                                    });
-                                    await refresh();
-                                  });
-                              }}
-                            />
-                          </td>
-                          <td className="date-cell">{fmtDate(r.date)}</td>
-                          <td>
-                            <span
+                          Импортировать
+                        </button>
+                      </div>
+                    )}
+                    <div className="filters">
+                      <div className="search">
+                        <Search size={17} />
+                        <input
+                          aria-label="Поиск реплеев"
+                          placeholder="Игрок, карта или имя файла…"
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                        />
+                      </div>
+                      <select
+                        aria-label="Фильтр игроков"
+                        value={playerFilter}
+                        onChange={(e) => setPlayerFilter(e.target.value)}
+                      >
+                        <option value="">Все игроки</option>
+                        {players.map((p) => (
+                          <option key={p}>{p}</option>
+                        ))}
+                      </select>
+                      <select
+                        aria-label="Сортировка"
+                        value={sort}
+                        onChange={(e) => setSort(e.target.value)}
+                      >
+                        <option value="new">Сначала новые</option>
+                        <option value="old">Сначала старые</option>
+                        <option value="score">По счёту</option>
+                      </select>
+                    </div>
+                    <div className="date-filters">
+                      <Clock3 size={14} />
+                      <span>Период</span>
+                      <input
+                        aria-label="Дата начала"
+                        type="date"
+                        value={dateFrom}
+                        onChange={(e) => setDateFrom(e.target.value)}
+                      />
+                      <span>—</span>
+                      <input
+                        aria-label="Дата конца"
+                        type="date"
+                        value={dateTo}
+                        onChange={(e) => setDateTo(e.target.value)}
+                      />
+                      {groups.length > 0 && (
+                        <select
+                          aria-label="Группа"
+                          value={groupFilter}
+                          onChange={(e) => setGroupFilter(e.target.value)}
+                        >
+                          <option value="">Все группы</option>
+                          {groups.map((g) => (
+                            <option key={g}>{g}</option>
+                          ))}
+                        </select>
+                      )}
+                      <button
+                        className="text-button"
+                        onClick={() => {
+                          setDateFrom("");
+                          setDateTo("");
+                          setMapFilter("");
+                          setPlayerFilter("");
+                          setSearch("");
+                          setGroupFilter("");
+                        }}
+                      >
+                        Сбросить
+                      </button>
+                    </div>
+                    <div className="selection-bar">
+                      <span>
+                        <b>{selected.length}</b> выбрано для видео{" "}
+                        {selected.length > 0 && <small>· одна карта</small>}
+                      </span>
+                      <div>
+                        <button className="text-button" onClick={selectAll}>
+                          Выбрать все попытки
+                        </button>
+                        <button
+                          className="text-button"
+                          onClick={() => patch({ replayIds: [] })}
+                        >
+                          Снять выбор
+                        </button>
+                      </div>
+                    </div>
+                    <div className="table-wrap">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th></th>
+                            <th>Игрок / попытка</th>
+                            <th>Дата игры</th>
+                            <th>Точность</th>
+                            <th>Комбо</th>
+                            <th>Промахи</th>
+                            {project.kind === "comparison" && <th>Цвет</th>}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {visible.map((r) => (
+                            <tr
+                              key={r.id}
                               className={
-                                r.accuracy >= 98 ? "accuracy high" : "accuracy"
+                                project.replayIds.includes(r.id)
+                                  ? "selected"
+                                  : ""
                               }
                             >
-                              {r.accuracy.toFixed(2)}
-                              <small>%</small>
-                            </span>
-                          </td>
-                          <td>
-                            {num(r.combo)}
-                            <small>×</small>
-                          </td>
-                          <td>
-                            <span className={r.misses ? "misses" : "zero"}>
-                              {r.misses}
-                            </span>
-                          </td>
-                          <td>
-                            {colors[r.id] ? (
-                              <input
-                                className="swatch"
-                                aria-label={`Цвет ${r.filename}`}
-                                type="color"
-                                value={colors[r.id]}
-                                onChange={(e) =>
-                                  updatePalette("overrides", {
-                                    ...project.palette.overrides,
-                                    [r.id]: e.target.value,
-                                  })
-                                }
-                              />
-                            ) : (
-                              <span className="unselected-dot" />
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {!visible.length && (
-                    <div className="empty-library">
-                      <Layers3 size={35} />
-                      <h3>
-                        {state.replays.length
-                          ? "Ничего не найдено"
-                          : "Здесь начинается ваша история"}
-                      </h3>
-                      <p>
-                        {state.replays.length
-                          ? "Измените фильтры, чтобы найти нужные попытки."
-                          : "Добавьте реплеи одной карты за разные даты — и увидите свой прогресс."}
-                      </p>
-                      {!state.replays.length && (
-                        <button
-                          className="button primary"
-                          onClick={() => fileRef.current?.click()}
-                        >
-                          <Plus size={16} />
-                          Добавить первые реплеи
-                        </button>
+                              <td>
+                                <input
+                                  aria-label={`Выбрать ${r.filename}`}
+                                  type="checkbox"
+                                  checked={project.replayIds.includes(r.id)}
+                                  onChange={(e) =>
+                                    chooseReplay(r, e.target.checked)
+                                  }
+                                />
+                              </td>
+                              <td>
+                                <div className="player-cell">
+                                  <div className="avatar">
+                                    {r.player.slice(0, 2).toUpperCase()}
+                                  </div>
+                                  <div>
+                                    <b>{r.player}</b>
+                                    <small title={r.filename}>
+                                      {r.modList.join(" ") || "No Mod"}{" "}
+                                      <span>· {r.source}</span>
+                                    </small>
+                                  </div>
+                                </div>
+                                <input
+                                  className="group-input"
+                                  aria-label={`Группа ${r.filename}`}
+                                  defaultValue={r.group}
+                                  placeholder="Добавить группу"
+                                  onBlur={(e) => {
+                                    if (e.target.value !== r.group)
+                                      perform("Сохраняем группу…", async () => {
+                                        await api("/replays/" + r.id, "PATCH", {
+                                          group: e.target.value,
+                                        });
+                                        await refresh();
+                                      });
+                                  }}
+                                />
+                              </td>
+                              <td className="date-cell">{fmtDate(r.date)}</td>
+                              <td>
+                                <span
+                                  className={
+                                    r.accuracy >= 98
+                                      ? "accuracy high"
+                                      : "accuracy"
+                                  }
+                                >
+                                  {r.accuracy.toFixed(2)}
+                                  <small>%</small>
+                                </span>
+                              </td>
+                              <td>
+                                {num(r.combo)}
+                                <small>×</small>
+                              </td>
+                              <td>
+                                <span className={r.misses ? "misses" : "zero"}>
+                                  {r.misses}
+                                </span>
+                              </td>
+                              {project.kind === "comparison" && (
+                                <td>
+                                  {colors[r.id] ? (
+                                    <input
+                                      className="swatch"
+                                      aria-label={`Цвет ${r.filename}`}
+                                      type="color"
+                                      value={colors[r.id]}
+                                      onChange={(e) =>
+                                        updatePalette("overrides", {
+                                          ...project.palette.overrides,
+                                          [r.id]: e.target.value,
+                                        })
+                                      }
+                                    />
+                                  ) : (
+                                    <span className="unselected-dot" />
+                                  )}
+                                </td>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {!visible.length && (
+                        <div className="empty-library">
+                          <Layers3 size={35} />
+                          <h3>
+                            {state.replays.length
+                              ? "Ничего не найдено"
+                              : "Здесь начинается ваша история"}
+                          </h3>
+                          <p>
+                            {state.replays.length
+                              ? "Измените фильтры, чтобы найти нужные попытки."
+                              : "Добавьте реплеи одной карты за разные даты — и увидите свой прогресс."}
+                          </p>
+                          {!state.replays.length && (
+                            <button
+                              className="button primary"
+                              onClick={() => fileRef.current?.click()}
+                            >
+                              <Plus size={16} />
+                              Добавить первые реплеи
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
-                  )}
-                </div>
-                <div className="library-foot">
-                  <span>
-                    <i />
-                    osu!standard · stable и lazer
-                  </span>
-                  <span>
-                    Показано {visible.length} из {state.replays.length}
-                  </span>
-                </div>
-                {selected.length > 0 && (
-                  <section className="legend">
-                    <h3>
-                      История в цвете <small>Даты выбранных попыток</small>
-                    </h3>
-                    <div
-                      className="legend-gradient"
-                      style={{ background: paletteCss }}
-                    />
-                    <div className="legend-items">
-                      {[...selected]
-                        .sort(
-                          (a, b) =>
-                            (a.date ? Date.parse(a.date) : Infinity) -
-                              (b.date ? Date.parse(b.date) : Infinity) ||
-                            a.id.localeCompare(b.id),
-                        )
-                        .map((r) => (
-                          <div key={r.id}>
-                            <i style={{ background: colors[r.id] }} />
-                            <span>
-                              {r.player}
-                              <small>{fmtDate(r.date)}</small>
-                            </span>
-                            <code>{colors[r.id]}</code>
-                            <button
-                              className="icon-btn"
-                              title="Снять ручной цвет"
-                              onClick={() => {
-                                const overrides = {
-                                  ...project.palette.overrides,
-                                };
-                                delete overrides[r.id];
-                                updatePalette("overrides", overrides);
-                              }}
-                            >
-                              <RefreshCw size={12} />
-                            </button>
-                          </div>
-                        ))}
+                    <div className="library-foot">
+                      <span>
+                        <i />
+                        osu!standard · stable и lazer
+                      </span>
+                      <span>
+                        Показано {visible.length} из {state.replays.length}
+                      </span>
                     </div>
-                  </section>
+                    {project.kind === "comparison" && selected.length > 0 && (
+                      <section className="legend">
+                        <h3>
+                          История в цвете <small>Даты выбранных попыток</small>
+                        </h3>
+                        <div
+                          className="legend-gradient"
+                          style={{ background: paletteCss }}
+                        />
+                        <div className="legend-items">
+                          {[...selected]
+                            .sort(
+                              (a, b) =>
+                                (a.date ? Date.parse(a.date) : Infinity) -
+                                  (b.date ? Date.parse(b.date) : Infinity) ||
+                                a.id.localeCompare(b.id),
+                            )
+                            .map((r) => (
+                              <div key={r.id}>
+                                <i style={{ background: colors[r.id] }} />
+                                <span>
+                                  {r.player}
+                                  <small>{fmtDate(r.date)}</small>
+                                </span>
+                                <code>{colors[r.id]}</code>
+                                <button
+                                  className="icon-btn"
+                                  title="Снять ручной цвет"
+                                  onClick={() => {
+                                    const overrides = {
+                                      ...project.palette.overrides,
+                                    };
+                                    delete overrides[r.id];
+                                    updatePalette("overrides", overrides);
+                                  }}
+                                >
+                                  <RefreshCw size={12} />
+                                </button>
+                              </div>
+                            ))}
+                        </div>
+                      </section>
+                    )}
+                  </>
                 )}
                 <section className="workflow-card map-summary">
-                  <h2>Карта из реплея</h2>
+                  <h2>{usesReplays ? "Карта из реплея" : "Карта для видео"}</h2>
+                  {!usesReplays && (
+                    <FieldLabel label="Карта и сложность">
+                      <select
+                        value={project.mapHash}
+                        onChange={(e) => patch({ mapHash: e.target.value })}
+                      >
+                        <option value="">Выберите карту</option>
+                        {state.maps.map((m) => (
+                          <option key={m.hash} value={m.hash}>
+                            {m.artist} — {m.title} [{m.difficulty}]
+                          </option>
+                        ))}
+                      </select>
+                    </FieldLabel>
+                  )}
                   <p>
                     {map
                       ? `${map.artist} — ${map.title} [${map.difficulty}]`
                       : project.mapHash
                         ? "Точная версия карты не найдена"
-                        : "Загрузите реплеи — карта определится автоматически"}
+                        : usesReplays
+                          ? "Загрузите реплеи — карта определится автоматически"
+                          : "Выберите карту из Songs / lazer или импортируйте .osz"}
                   </p>
                   {project.mapHash && <small>MD5: {project.mapHash}</small>}
                   {project.mapHash && !map && (
@@ -1094,9 +1201,15 @@ function App() {
                         perform("Импортируем карту…", async () => {
                           const form = new FormData();
                           form.append("file", f);
-                          await api("/maps/import", "POST", form);
+                          const imported = await api(
+                            "/maps/import",
+                            "POST",
+                            form,
+                          );
                           await refresh();
-                          if (project.mapHash)
+                          if (!usesReplays && imported.maps?.length)
+                            patch({ mapHash: imported.maps[0].hash });
+                          if (usesReplays && project.mapHash)
                             await api("/maps/resolve", "POST", {
                               hash: project.mapHash,
                             });
@@ -1106,13 +1219,17 @@ function App() {
                   />
                 </section>
                 <div className="workflow-grid">
-                  <PalettePanel
-                    project={project}
-                    selected={selected}
-                    updatePalette={updatePalette}
-                    paletteCss={paletteCss}
-                  />
-                  <RulesPanel project={project} updateRules={updateRules} />
+                  {project.kind === "comparison" && (
+                    <PalettePanel
+                      project={project}
+                      selected={selected}
+                      updatePalette={updatePalette}
+                      paletteCss={paletteCss}
+                    />
+                  )}
+                  {multiReplay && (
+                    <RulesPanel project={project} updateRules={updateRules} />
+                  )}
                   <ExportPanel
                     project={project}
                     patch={patch}
@@ -1193,7 +1310,14 @@ function App() {
                   <div className="settings-layout">
                     <div className="settings-nav">
                       {schema
-                        .filter((s) => s.key !== "Credentials")
+                        .filter(
+                          (s) =>
+                            s.key !== "Credentials" &&
+                            s.key !== "Input" &&
+                            (s.key !== "CursorDance" ||
+                              ["dance", "autoplay"].includes(project.kind)) &&
+                            (s.key !== "Knockout" || multiReplay),
+                        )
                         .map((s) => (
                           <button
                             key={s.key}
@@ -1325,7 +1449,13 @@ function App() {
                     />
                   </FieldLabel>
                   <div className="render-summary">
-                    <span>{selected.length} попыток</span>
+                    <span>
+                      {usesReplays
+                        ? `${selected.length} попыток`
+                        : project.kind === "classic"
+                          ? "Реплеи из папки"
+                          : "Автоматические курсоры"}
+                    </span>
                     <span>
                       {project.export.width} × {project.export.height} ·{" "}
                       {project.export.fps} fps
@@ -1336,18 +1466,15 @@ function App() {
                       {!health?.engine
                         ? "Настройте путь к danser."
                         : !map
-                          ? "Загрузите реплеи и найдите точную карту."
+                          ? usesReplays
+                            ? "Загрузите реплеи и найдите точную карту."
+                            : "Выберите карту для видео."
                           : "Для цветов нужна сборка danser-studio."}
                     </p>
                   )}
                   <button
                     className="button ghost full"
-                    disabled={
-                      !!busy ||
-                      !engineReady ||
-                      !health?.ffmpeg ||
-                      project.kind === "play"
-                    }
+                    disabled={!!busy || !engineReady || !health?.ffmpeg}
                     onClick={() => run("preview")}
                   >
                     <Play size={15} />
@@ -1355,12 +1482,7 @@ function App() {
                   </button>
                   <button
                     className="button primary full"
-                    disabled={
-                      !!busy ||
-                      !engineReady ||
-                      !health?.ffmpeg ||
-                      project.kind === "play"
-                    }
+                    disabled={!!busy || !engineReady || !health?.ffmpeg}
                     onClick={() => run("record")}
                   >
                     <Clapperboard size={17} />
@@ -1450,6 +1572,9 @@ function App() {
                           ) : (
                             <button
                               className="text-button"
+                              disabled={
+                                j.action === "watch" || j.retryable === false
+                              }
                               onClick={() =>
                                 perform("Запускаем повторно…", async () => {
                                   await api("/jobs/" + j.id + "/retry", "POST");

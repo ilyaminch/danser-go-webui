@@ -367,6 +367,65 @@ export function ExportPanel({
           <option value="mkv">MKV</option>
         </select>
       </FieldLabel>
+      {project.export.encoder === "h264_nvenc" && (
+        <div className="form-grid">
+          <FieldLabel
+            label="Пресет NVENC"
+            hint="p1 — быстрее, p7 — лучше сжатие."
+          >
+            <select
+              value={project.configPatch.Recording?.h264_nvenc?.Preset ?? "p4"}
+              onChange={(e) =>
+                patch({
+                  configPatch: {
+                    ...project.configPatch,
+                    Recording: {
+                      ...project.configPatch.Recording,
+                      h264_nvenc: {
+                        ...project.configPatch.Recording?.h264_nvenc,
+                        Preset: e.target.value,
+                      },
+                    },
+                  },
+                })
+              }
+            >
+              {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                <option
+                  key={n}
+                  value={`p${n}`}
+                >{`p${n}${n === 4 ? " — баланс" : n === 1 ? " — самый быстрый" : ""}`}</option>
+              ))}
+            </select>
+          </FieldLabel>
+          <FieldLabel
+            label="Качество NVENC (CQ)"
+            hint="Меньшее число — выше качество и больше файл."
+          >
+            <input
+              type="number"
+              min="0"
+              max="51"
+              value={project.configPatch.Recording?.h264_nvenc?.CQ ?? 22}
+              onChange={(e) =>
+                patch({
+                  configPatch: {
+                    ...project.configPatch,
+                    Recording: {
+                      ...project.configPatch.Recording,
+                      h264_nvenc: {
+                        ...project.configPatch.Recording?.h264_nvenc,
+                        RateControl: "cq",
+                        CQ: Number(e.target.value),
+                      },
+                    },
+                  },
+                })
+              }
+            />
+          </FieldLabel>
+        </div>
+      )}
       <div className="form-grid">
         <FieldLabel label="Начало, с">
           <input
@@ -403,13 +462,6 @@ export function ExportPanel({
       >
         Снимок выбранного момента
       </button>
-      <button
-        className="button ghost full"
-        disabled={!!busy || !engineReady}
-        onClick={() => run("watch")}
-      >
-        Просмотр в окне danser
-      </button>
     </section>
   );
 }
@@ -426,19 +478,6 @@ export function LaunchPanel({
   return (
     <section className="workflow-card">
       <h2>Параметры запуска</h2>
-      <FieldLabel label="Сценарий">
-        <select
-          value={project.kind}
-          onChange={(e) => patch({ kind: e.target.value })}
-        >
-          <option value="comparison">Сравнение реплеев</option>
-          <option value="replay">Один реплей</option>
-          <option value="dance">Cursor Dance</option>
-          <option value="autoplay">Autoplay с replay UI</option>
-          <option value="classic">Классический knockout</option>
-          <option value="play">Интерактивная игра в окне danser</option>
-        </select>
-      </FieldLabel>
       <div className="form-grid">
         {[
           ["speed", "Скорость"],
@@ -451,42 +490,52 @@ export function LaunchPanel({
           ["ar", "AR"],
           ["od", "OD"],
           ["hp", "HP"],
-        ].map(([key, label]) => (
-          <FieldLabel label={label} key={key}>
+        ]
+          .filter(
+            ([key]) =>
+              !["cursors", "tag"].includes(key) ||
+              ["dance", "autoplay"].includes(project.kind),
+          )
+          .map(([key, label]) => (
+            <FieldLabel label={label} key={key}>
+              <input
+                type="number"
+                step="any"
+                value={project.launch[key] ?? ""}
+                placeholder="По умолчанию"
+                onChange={(e) =>
+                  updateLaunch(
+                    key,
+                    e.target.value === "" ? null : Number(e.target.value),
+                  )
+                }
+              />
+            </FieldLabel>
+          ))}
+      </div>
+      {project.kind !== "comparison" && (
+        <>
+          <FieldLabel
+            label="Моды classic"
+            hint="Переопределяет моды одиночного реплея. Например HDHR."
+          >
             <input
-              type="number"
-              step="any"
-              value={project.launch[key] ?? ""}
-              placeholder="По умолчанию"
-              onChange={(e) =>
-                updateLaunch(
-                  key,
-                  e.target.value === "" ? null : Number(e.target.value),
-                )
-              }
+              value={project.launch.mods ?? ""}
+              onChange={(e) => updateLaunch("mods", e.target.value)}
             />
           </FieldLabel>
-        ))}
-      </div>
-      <FieldLabel
-        label="Моды classic"
-        hint="Переопределяет моды одиночного реплея. Например HDHR."
-      >
-        <input
-          value={project.launch.mods ?? ""}
-          onChange={(e) => updateLaunch("mods", e.target.value)}
-        />
-      </FieldLabel>
-      <FieldLabel
-        label="Моды lazer (mods2)"
-        hint="JSON-массив с acronym и settings; не совмещается с classic mods."
-      >
-        <textarea
-          value={project.launch.mods2 ?? ""}
-          placeholder='[{"acronym":"DT","settings":{"speed_change":1.2}}]'
-          onChange={(e) => updateLaunch("mods2", e.target.value)}
-        />
-      </FieldLabel>
+          <FieldLabel
+            label="Моды lazer (mods2)"
+            hint="JSON-массив с acronym и settings; не совмещается с classic mods."
+          >
+            <textarea
+              value={project.launch.mods2 ?? ""}
+              placeholder='[{"acronym":"DT","settings":{"speed_change":1.2}}]'
+              onChange={(e) => updateLaunch("mods2", e.target.value)}
+            />
+          </FieldLabel>
+        </>
+      )}
       {[
         ["skip", "Пропустить вступление"],
         ["quickstart", "Быстрый старт без lead-in"],
@@ -504,7 +553,7 @@ export function LaunchPanel({
       ))}
       <p className="note">
         CS/AR/OD/HP зависят от сценария и DA. Сравнение сохраняет исходные моды
-        попыток. Для Play доступен просмотр в нативном окне.
+        попыток. Mirror и TAG управляют автоматическими курсорами.
       </p>
     </section>
   );

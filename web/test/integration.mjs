@@ -207,6 +207,37 @@ try {
   await request("/skins");
   project.launch.skinId = skin.id;
   await request("/render/validate", "POST", project);
+  await assert.rejects(
+    request("/jobs", "POST", { project, action: "watch" }),
+    /действие/,
+  );
+  for (const kind of ["dance", "autoplay"]) {
+    const queued = await request("/jobs", "POST", {
+      project: {
+        ...project,
+        kind,
+        replayIds: [],
+        launch: { ...project.launch, mods: kind === "autoplay" ? "HD" : "" },
+      },
+      action: "preview",
+    });
+    const job = await waitUntil(async () => {
+      const item = (await request("/state")).jobs.find(
+        (j) => j.id === queued.id,
+      );
+      return item && !["queued", "running"].includes(item.status)
+        ? item
+        : false;
+    });
+    assert.equal(job.status, "completed", job.error || job.log.slice(-2000));
+    assert.equal(
+      (await request("/state")).replays.length,
+      2,
+      "Map-only preview removed uploads",
+    );
+    if (kind === "autoplay")
+      assert.equal(job.args[job.args.indexOf("-mods") + 1], "HDAT");
+  }
   const preview = await request("/jobs", "POST", {
     project,
     action: "preview",

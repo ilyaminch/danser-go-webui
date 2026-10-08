@@ -13,7 +13,8 @@ Built on **[Wieku/danser-go](https://github.com/Wieku/danser-go)**. This is an u
 - One render workspace with colors, elimination, export, launch options, skin selection, and the complete engine settings editor. Render settings remain in the browser tab session; no saved projects are created.
 - Local skin folders and `.osk` archives, plus manual `.osz` map import when the exact replay map is missing.
 - Rendering queue, progress and logs, cancellation and retry, short video previews, PNG screenshots, and MP4/MKV export.
-- Single replay, cursor dance, autoplay, classic knockout, and native interactive play scenarios.
+- Scenario-first workflow: replay comparison, a single replay, Cursor Dance, autoplay, and classic knockout. Dance and autoplay select a map directly without uploading replays; classic knockout reads the configured replay directory.
+- Recording defaults: NVIDIA H.264 NVENC, preset p4, CQ 22, High profile, 1080p60 MP4, yuv420p, motion blur disabled, and no encoding speed cap. Select libx264 on computers without working NVENC. NVENC preset and quality are available beside the encoder.
 
 The application currently has a **Russian-language interface**. Windows is the tested platform.
 
@@ -120,7 +121,7 @@ Local development notes and temporary screenshots are kept in `.local-work/`, wh
 
 - Early working version; there is no full installer or automatic map download.
 - One map per scene; multiple-map video editing and render pause are not implemented.
-- Live engine playback uses a native window, not an embedded browser renderer.
+- The web interface provides video previews and screenshots. Interactive play and native window playback are not exposed through its API.
 - The settings editor exposes the current Go configuration schema. Some labels remain in English, complex arrays use JSON, dynamic choices need manual input, and visibility conditions are shown as hints.
 - Main render controls override the corresponding engine JSON values when a job starts. Fixed comparison palettes disable cursor rainbow and beat flashes.
 - Browser video playback depends on the selected codec; MP4/H.264/AAC is the usual interoperable choice.

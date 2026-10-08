@@ -52,7 +52,7 @@ export function validateProject(project, store) {
   if (!project || typeof project.name !== "string" || !project.name.trim())
     throw new Error("Укажите название проекта");
   if (
-    !["comparison", "replay", "dance", "autoplay", "play", "classic"].includes(
+    !["comparison", "replay", "dance", "autoplay", "classic"].includes(
       project.kind,
     )
   )
@@ -120,7 +120,9 @@ export function validateProject(project, store) {
     new Set(project.replayIds).size !== project.replayIds.length
   )
     throw new Error("Некорректная подборка реплеев");
-  const replays = project.replayIds.map((id) => store.get("replay", id));
+  const replays = ["comparison", "replay"].includes(project.kind)
+    ? project.replayIds.map((id) => store.get("replay", id))
+    : [];
   if (replays.some((r) => !r))
     throw new Error("Реплей проекта отсутствует в библиотеке");
   if (["comparison", "replay"].includes(project.kind) && !replays.length)
@@ -197,14 +199,25 @@ export function buildArguments(
   else if (project.kind === "replay") args.push("-replay", replays[0].path);
   else {
     args.push("-md5", project.mapHash);
-    if (project.kind === "play") args.push("-play");
     if (project.kind === "classic") args.push("-knockout");
   }
   let mods = project.launch.mods;
-  if (project.kind === "autoplay" && !mods && !project.launch.mods2)
-    mods = "AT";
+  if (
+    project.kind === "autoplay" &&
+    !project.launch.mods2 &&
+    !/AT/i.test(mods || "")
+  )
+    mods = (mods || "") + "AT";
   if (mods) args.push("-mods", mods);
-  if (project.launch.mods2) args.push("-mods2", project.launch.mods2);
+  if (project.launch.mods2) {
+    const mods2 = JSON.parse(project.launch.mods2);
+    if (
+      project.kind === "autoplay" &&
+      !mods2.some((m) => m.acronym.toUpperCase() === "AT")
+    )
+      mods2.push({ acronym: "AT" });
+    args.push("-mods2", JSON.stringify(mods2));
+  }
   const fields = [
     "start",
     "end",
@@ -300,12 +313,12 @@ export function createRenderer(store, dataDir) {
         error: "Сервис был остановлен. Запустите задание повторно.",
       });
   async function enqueue(project, action) {
+    if (!["record", "preview", "screenshot"].includes(action))
+      throw new Error("Неизвестное действие");
+    if (project && !["comparison", "replay"].includes(project.kind))
+      project = { ...project, replayIds: [] };
     await resolveMap(store, project?.mapHash);
     validateProject(project, store);
-    if (!["record", "preview", "screenshot", "watch"].includes(action))
-      throw new Error("Неизвестное действие");
-    if (project.kind === "play" && action !== "watch")
-      throw new Error("Для Play доступно только интерактивное окно");
     const config = store.get("config", "local");
     if (!config?.enginePath)
       throw new Error("Укажите путь к danser в настройках");
