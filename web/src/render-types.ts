@@ -38,6 +38,7 @@ export type Project = {
   id?: string;
   name: string;
   kind: string;
+  visualization?: string;
   mapHash: string;
   replayIds: string[];
   palette: Palette;

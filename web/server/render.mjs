@@ -51,11 +51,7 @@ export const merge = (a, b) => {
 export function validateProject(project, store) {
   if (!project || typeof project.name !== "string" || !project.name.trim())
     throw new Error("Укажите название проекта");
-  if (
-    !["comparison", "replay", "dance", "autoplay", "classic"].includes(
-      project.kind,
-    )
-  )
+  if (!["comparison", "dance", "autoplay"].includes(project.kind))
     throw new Error("Неизвестный сценарий");
   if (
     !Number.isInteger(project.rules?.mode) ||
@@ -120,15 +116,14 @@ export function validateProject(project, store) {
     new Set(project.replayIds).size !== project.replayIds.length
   )
     throw new Error("Некорректная подборка реплеев");
-  const replays = ["comparison", "replay"].includes(project.kind)
-    ? project.replayIds.map((id) => store.get("replay", id))
-    : [];
+  const replays =
+    project.kind === "comparison"
+      ? project.replayIds.map((id) => store.get("replay", id))
+      : [];
   if (replays.some((r) => !r))
     throw new Error("Реплей проекта отсутствует в библиотеке");
-  if (["comparison", "replay"].includes(project.kind) && !replays.length)
+  if (project.kind === "comparison" && !replays.length)
     throw new Error("Выберите хотя бы один реплей");
-  if (project.kind === "replay" && replays.length !== 1)
-    throw new Error("Для одиночного режима выберите один реплей");
   if (new Set(replays.map((r) => r.mapHash)).size > 1)
     throw new Error("В одной сцене должны быть реплеи одной карты");
   const map = store.get("map", project.mapHash);
@@ -196,11 +191,7 @@ export function buildArguments(
   if (project.launch.noDbCheck) args.push("-nodbcheck");
   if (project.kind === "comparison")
     args.push("-md5", project.mapHash, "-studio-manifest", manifestPath);
-  else if (project.kind === "replay") args.push("-replay", replays[0].path);
-  else {
-    args.push("-md5", project.mapHash);
-    if (project.kind === "classic") args.push("-knockout");
-  }
+  else args.push("-md5", project.mapHash);
   let mods = project.launch.mods;
   if (
     project.kind === "autoplay" &&
@@ -315,7 +306,13 @@ export function createRenderer(store, dataDir) {
   async function enqueue(project, action) {
     if (!["record", "preview", "screenshot"].includes(action))
       throw new Error("Неизвестное действие");
-    if (project && !["comparison", "replay"].includes(project.kind))
+    if (project?.kind === "replay")
+      project = {
+        ...project,
+        kind: "comparison",
+        launch: { ...project.launch, mods: "", mods2: "" },
+      };
+    if (project && project.kind !== "comparison")
       project = { ...project, replayIds: [] };
     await resolveMap(store, project?.mapHash);
     validateProject(project, store);

@@ -208,6 +208,33 @@ try {
   project.launch.skinId = skin.id;
   await request("/render/validate", "POST", project);
   await assert.rejects(
+    request("/jobs", "POST", {
+      project: { ...project, kind: "classic" },
+      action: "preview",
+    }),
+    /сценарий/,
+  );
+  const single = await request("/jobs", "POST", {
+    project: {
+      ...project,
+      kind: "comparison",
+      replayIds: [project.replayIds[0]],
+    },
+    action: "preview",
+  });
+  const singleJob = await waitUntil(async () => {
+    const item = (await request("/state")).jobs.find((j) => j.id === single.id);
+    return item && !["queued", "running"].includes(item.status) ? item : false;
+  });
+  assert.equal(
+    singleJob.status,
+    "completed",
+    singleJob.error || singleJob.log.slice(-2000),
+  );
+  assert.ok(singleJob.args.includes("-studio-manifest"));
+  assert.ok(!singleJob.args.includes("-replay"));
+  assert.equal((await request("/state")).replays.length, 2);
+  await assert.rejects(
     request("/jobs", "POST", { project, action: "watch" }),
     /действие/,
   );

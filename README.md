@@ -13,7 +13,7 @@ Built on **[Wieku/danser-go](https://github.com/Wieku/danser-go)**. This is an u
 - One render workspace with colors, elimination, export, launch options, skin selection, and the complete engine settings editor. Render settings remain in the browser tab session; no saved projects are created.
 - Local skin folders and `.osk` archives, plus manual `.osz` map import when the exact replay map is missing.
 - Rendering queue, progress and logs, cancellation and retry, short video previews, PNG screenshots, and MP4/MKV export.
-- Scenario-first workflow: replay comparison, a single replay, Cursor Dance, autoplay, and classic knockout. Dance and autoplay select a map directly without uploading replays; classic knockout reads danser's own `replays` directory beside the engine, applies `MaxPlayers` / `ExcludeMods`, and does not use Studio's selected uploads or palette.
+- Two scenarios selected by a switch: **Replay video** accepts one or more attempts of the same map; **Map visualization** offers Cursor Dance or autoplay with the gameplay interface, without replay uploads. A single attempt uses the same manifest workflow and danser automatically shows its score/combo interface. Classic folder knockout is not exposed.
 - Recording defaults: NVIDIA H.264 NVENC, preset p4, CQ 22, High profile, 1080p60 MP4, yuv420p, motion blur disabled, and no encoding speed cap. Select libx264 on computers without working NVENC. NVENC preset and quality are available beside the encoder.
 
 The application currently has a **Russian-language interface**. Windows is the tested platform.

@@ -76,6 +76,7 @@ const emptyState: State = {
 const freshProject = (): Project => ({
   name: "Прогресс тренировок",
   kind: "comparison",
+  visualization: "dance",
   mapHash: "",
   replayIds: [],
   palette: {
@@ -175,10 +176,18 @@ function App() {
           ? {
               ...freshProject(),
               ...JSON.parse(saved),
-              kind:
-                JSON.parse(saved).kind === "play"
-                  ? "comparison"
-                  : JSON.parse(saved).kind,
+              kind: !["dance", "autoplay"].includes(JSON.parse(saved).kind)
+                ? "comparison"
+                : JSON.parse(saved).kind,
+              visualization:
+                JSON.parse(saved).visualization ??
+                (JSON.parse(saved).kind === "autoplay" ? "autoplay" : "dance"),
+              launch: {
+                ...JSON.parse(saved).launch,
+                ...(!["dance", "autoplay"].includes(JSON.parse(saved).kind)
+                  ? { mods: "", mods2: "" }
+                  : {}),
+              },
               ...(sessionStorage.getItem("studio-recording-defaults") !==
               "nvenc-p4-v1"
                 ? {
@@ -243,11 +252,8 @@ function App() {
       return {
         ...p,
         replayIds: ids,
-        mapHash: ["comparison", "replay"].includes(p.kind)
-          ? ids.length
-            ? p.mapHash
-            : ""
-          : p.mapHash,
+        mapHash:
+          p.kind === "comparison" ? (ids.length ? p.mapHash : "") : p.mapHash,
       };
     });
     return s;
@@ -259,13 +265,10 @@ function App() {
         if (s.replays.length)
           setProject((p) => ({
             ...p,
-            mapHash: ["comparison", "replay"].includes(p.kind)
-              ? s.replays[0].mapHash
-              : p.mapHash,
+            mapHash: p.kind === "comparison" ? s.replays[0].mapHash : p.mapHash,
             replayIds: s.replays
               .filter((r: Replay) => r.mapHash === s.replays[0].mapHash)
-              .map((r: Replay) => r.id)
-              .slice(0, p.kind === "replay" ? 1 : s.replays.length),
+              .map((r: Replay) => r.id),
           }));
       })
       .catch((e) => setNotice({ text: e.message, error: true }));
@@ -309,16 +312,18 @@ function App() {
     setProject((p) => ({ ...p, palette: { ...p.palette, [key]: value } }));
   const updateExport = (key: string, value: any) =>
     setProject((p) => ({ ...p, export: { ...p.export, [key]: value } }));
-  const usesReplays = ["comparison", "replay"].includes(project.kind);
-  const multiReplay = ["comparison", "classic"].includes(project.kind);
+  const usesReplays = project.kind === "comparison";
+  const multiReplay = usesReplays;
   const scenarioChange = (kind: string) => {
     setProject((p) => ({
       ...p,
       kind,
-      mapHash: ["comparison", "replay"].includes(kind)
-        ? (state.replays.find((r) => p.replayIds.includes(r.id))?.mapHash ?? "")
-        : p.mapHash,
-      replayIds: kind === "replay" ? p.replayIds.slice(0, 1) : p.replayIds,
+      mapHash:
+        kind === "comparison"
+          ? (state.replays.find((r) => p.replayIds.includes(r.id))?.mapHash ??
+            "")
+          : p.mapHash,
+      visualization: kind === "comparison" ? p.visualization : kind,
       launch:
         kind === "comparison" ? { ...p.launch, mods: "", mods2: "" } : p.launch,
     }));
@@ -366,9 +371,7 @@ function App() {
     }
     patch({
       replayIds: checked
-        ? project.kind === "replay"
-          ? [r.id]
-          : [...project.replayIds, r.id]
+        ? [...project.replayIds, r.id]
         : project.replayIds.filter((id) => id !== r.id),
       ...(checked ? { mapHash: r.mapHash } : {}),
     });
@@ -382,10 +385,6 @@ function App() {
     const hash = project.mapHash || visible[0]?.mapHash;
     if (!hash) return;
     const same = visible.filter((r) => r.mapHash === hash);
-    if (project.kind === "replay") {
-      patch({ mapHash: hash, replayIds: same.slice(0, 1).map((r) => r.id) });
-      return;
-    }
     patch({
       mapHash: hash,
       replayIds: [...new Set([...project.replayIds, ...same.map((r) => r.id)])],
@@ -397,9 +396,7 @@ function App() {
       setProject((p) => ({
         ...p,
         mapHash: s.replays[0].mapHash,
-        replayIds: s.replays
-          .map((r: Replay) => r.id)
-          .slice(0, p.kind === "replay" ? 1 : s.replays.length),
+        replayIds: s.replays.map((r: Replay) => r.id),
       }));
     setNotice({
       text: `Добавлено: ${result.imported.length}. Дубликатов: ${result.duplicates.length}.${result.errors.length ? " Ошибки: " + result.errors.map((e: any) => `${e.file}: ${e.error}`).join("; ") : ""}${result.mapErrors?.length ? " Карты не найдены для " + result.mapErrors.length + " подборок. Настройте Songs или lazer." : ""}`,
@@ -441,6 +438,11 @@ function App() {
     depth = 0,
   ): React.ReactNode =>
     fields.map((field) => {
+      if (
+        prefix[0] === "Knockout" &&
+        ["MaxPlayers", "ExcludeMods"].includes(field.key)
+      )
+        return null;
       const keys = [...prefix, field.key],
         key = keys.join("."),
         value = getAt(keys),
@@ -747,24 +749,44 @@ function App() {
                 </div>
                 <section className="workflow-card">
                   <h2>Сценарий видео</h2>
-                  <FieldLabel label="Что создать">
-                    <select
-                      value={project.kind}
-                      onChange={(e) => scenarioChange(e.target.value)}
+                  <div className="scenario-switch">
+                    <span>Видео по реплеям</span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-label="Визуализация карты"
+                      aria-checked={!usesReplays}
+                      onClick={() =>
+                        scenarioChange(
+                          usesReplays
+                            ? (project.visualization ?? "dance")
+                            : "comparison",
+                        )
+                      }
                     >
-                      <option value="comparison">Сравнение реплеев</option>
-                      <option value="replay">Один реплей</option>
-                      <option value="dance">Cursor Dance</option>
-                      <option value="autoplay">Autoplay с replay UI</option>
-                      <option value="classic">Классический knockout</option>
-                    </select>
-                  </FieldLabel>
+                      <span />
+                    </button>
+                    <span>Визуализация карты</span>
+                  </div>
+                  {!usesReplays && (
+                    <FieldLabel label="Вариант визуализации">
+                      <select
+                        value={project.kind}
+                        onChange={(e) => scenarioChange(e.target.value)}
+                      >
+                        <option value="dance">Cursor Dance</option>
+                        <option value="autoplay">
+                          Autoplay с игровым интерфейсом
+                        </option>
+                      </select>
+                    </FieldLabel>
+                  )}
                   <p className="note">
                     {usesReplays
-                      ? "Загрузите попытки одной карты. Для одиночного видео выберите одну попытку."
-                      : project.kind === "classic"
-                        ? "Движок берёт реплеи из собственной папки replays рядом с danser, а не из хранилища osu!lazer. Применяются лимит MaxPlayers и фильтр ExcludeMods. Выделение попыток и градиент здесь не применяются."
-                        : "Выберите карту ниже. Реплеи для этого сценария не нужны."}
+                      ? "Загрузите одну или несколько попыток одной карты. Для одной попытки danser автоматически показывает счёт и комбо. Цвета и выбывание настраиваются ниже."
+                      : project.kind === "autoplay"
+                        ? "Автоматическое прохождение карты со счётом, комбо и точностью. Реплеи не нужны."
+                        : "Декоративная визуализация карты с танцем курсоров. Реплеи не нужны."}
                   </p>
                 </section>
                 {usesReplays && (
@@ -1452,9 +1474,7 @@ function App() {
                     <span>
                       {usesReplays
                         ? `${selected.length} попыток`
-                        : project.kind === "classic"
-                          ? "Реплеи из папки"
-                          : "Автоматические курсоры"}
+                        : "Автоматические курсоры"}
                     </span>
                     <span>
                       {project.export.width} × {project.export.height} ·{" "}

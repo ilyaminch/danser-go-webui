@@ -28,7 +28,7 @@ const store = {
   list: () => [],
 };
 test("map-only scenarios do not consume or validate irrelevant uploaded replays", () => {
-  for (const kind of ["dance", "autoplay", "classic"])
+  for (const kind of ["dance", "autoplay"])
     assert.deepEqual(
       validateProject({ ...project(), kind }, store).replays,
       [],
@@ -59,7 +59,22 @@ test("autoplay retains AT with classic or lazer mods without duplicating it", ()
     assert.equal(actual[0].acronym, mods[0].acronym);
   }
 });
+test("one uploaded attempt uses the same explicit manifest workflow as a batch", () => {
+  const p = { ...project(), kind: "comparison", replayIds: ["attempt"] };
+  const available = {
+    get: (kind, id) =>
+      kind === "map" ? { hash: "map" } : { id, mapHash: "map" },
+  };
+  assert.equal(validateProject(p, available).replays.length, 1);
+  const args = buildArguments(p, "settings", "manifest", [], "out", "record");
+  assert.ok(args.includes("-studio-manifest"));
+  assert.ok(!args.includes("-replay"));
+});
 test("web rendering rejects interactive play and native-window actions", async () => {
+  assert.throws(
+    () => validateProject({ ...project(), kind: "classic" }, store),
+    /сценарий/,
+  );
   assert.throws(
     () => validateProject({ ...project(), kind: "play" }, store),
     /сценарий/,
