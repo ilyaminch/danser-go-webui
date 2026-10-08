@@ -11,6 +11,7 @@ import { detectLazer, indexLazer, resolveMap } from "./lazer.mjs";
 import { loadSchema } from "./schema.mjs";
 import { createRenderer, validateProject, runCommand } from "./render.mjs";
 import { importMapArchive, importSkin, listSkins } from "./assets.mjs";
+import { resolveMedia } from "./media.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = process.env.STUDIO_DATA_DIR || path.join(root, "data");
@@ -76,6 +77,55 @@ app.get("/api/state", (req, res) =>
     maps: store.list("map"),
     jobs: store.list("job").map(({ config, project, ...job }) => job),
     config: store.get("config", "local"),
+  }),
+);
+app.get(
+  "/api/maps/:hash/media",
+  asyncRoute(async (req, res) => {
+    const map = store.get("map", req.params.hash);
+    if (!map) return res.status(404).json({ error: "Map not found" });
+    const [background, audio] = await Promise.all(
+      ["background", "audio"].map((kind) =>
+        resolveMedia(store, map, kind).catch(() => null),
+      ),
+    );
+    const base = `/api/maps/${map.hash}/media/`;
+    res.json({
+      background: background ? base + "background" : null,
+      audio: audio ? base + "audio" : null,
+    });
+  }),
+);
+app.get(
+  "/api/maps/:hash/media/:kind",
+  asyncRoute(async (req, res) => {
+    const map = store.get("map", req.params.hash);
+    if (!map || !["background", "audio"].includes(req.params.kind))
+      return res.sendStatus(404);
+    const resource = await resolveMedia(store, map, req.params.kind);
+    if (!resource) return res.sendStatus(404);
+    const ext = path.extname(resource.name).toLowerCase();
+    const types = {
+      ".jpg": "image/jpeg",
+      ".jpeg": "image/jpeg",
+      ".png": "image/png",
+      ".webp": "image/webp",
+      ".mp3": "audio/mpeg",
+      ".ogg": "audio/ogg",
+      ".wav": "audio/wav",
+      ".flac": "audio/flac",
+    };
+    if (
+      !types[ext] ||
+      !(req.params.kind === "audio"
+        ? types[ext].startsWith("audio/")
+        : types[ext].startsWith("image/"))
+    )
+      return res.sendStatus(415);
+    res
+      .type(types[ext])
+      .set("Cache-Control", "private, no-cache")
+      .sendFile(resource.path);
   }),
 );
 app.get(
@@ -435,7 +485,10 @@ if (process.argv.includes("--dev")) {
   const { createServer } = await import("vite");
   const vite = await createServer({
     root,
-    server: { middlewareMode: true },
+    server: {
+      middlewareMode: true,
+      watch: { ignored: ["**/data/**", "**/.local-work/**"] },
+    },
     appType: "spa",
   });
   app.use(vite.middlewares);

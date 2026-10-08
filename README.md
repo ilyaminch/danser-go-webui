@@ -19,7 +19,23 @@ Built on **[Wieku/danser-go](https://github.com/Wieku/danser-go)**. This is an u
 - CS, AR, OD, and HP overrides are available only for map visualization. Replay video preserves the map difficulty and each attempt's recorded mods, including Difficulty Adjust; saved visualization overrides are ignored for replay rendering.
 - Recording defaults: NVIDIA H.264 NVENC, preset p4, CQ 22, High profile, 1080p60 MP4, yuv420p, motion blur disabled, and no encoding speed cap. Select libx264 on computers without working NVENC. NVENC preset and quality are available beside the encoder.
 
-The application currently has a **Russian-language interface**. Windows is the tested platform.
+The interface supports **Russian and English**, selectable in the header. Engine setting names and logs retain their original language. Windows is the tested platform.
+
+## Redesigned workspace
+
+The workspace is arranged around a persistent vinyl stage, with compact replay/map controls on the left and mode, cursor color, and skin controls on the right. Recommended video presets sit in the export dock; detailed encoding, timing, launch, JSON, and engine settings remain available in expandable sections.
+
+Selecting a map loads its background and audio from the filenames in the actual `.osu`, including read-only lazer resources. Music starts only with the play button, at 25% initial volume. Volume, mute, language, and animation preferences stay in the browser tab session. Listening does not change the rendered video's audio. Missing artwork or music leaves the rendering workflow available.
+
+The vinyl grooves, reflections, and rhythm background are authored CSS/SVG. Fonts are bundled locally with their OFL licenses; see [`web/public/ASSETS.md`](web/public/ASSETS.md). The layout targets desktop 16:9 screens and stacks on narrow screens. Animation can be disabled and respects reduced-motion preferences.
+
+## Redesigned workspace
+
+The workspace is arranged around a persistent vinyl stage, with compact replay/map controls on the left and mode, cursor color, and skin controls on the right. Recommended video presets sit in the export dock; detailed encoding, timing, launch, JSON, and engine settings remain available in expandable sections.
+
+Selecting a map loads its background and audio from the filenames in the actual `.osu`, including read-only lazer resources. Music starts only with the play button, at 25% initial volume. Volume, mute, language, and animation preferences stay in the browser tab session. Listening does not change the rendered video's audio. Missing artwork or music leaves the rendering workflow available.
+
+The vinyl grooves, reflections, and rhythm background are authored CSS/SVG. Fonts are bundled locally with their OFL licenses; see [`web/public/ASSETS.md`](web/public/ASSETS.md). The layout targets desktop 16:9 screens and stacks on narrow screens. Animation can be disabled and respects reduced-motion preferences.
 
 ## Requirements
 

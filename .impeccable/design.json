@@ -1,0 +1,476 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-08T23:30:00.772Z",
+  "title": "Design System: Danser Studio",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Night Plum",
+        "canonical": "#17131c",
+        "tonalRamp": [
+          "oklch(15% 0.0188 305.0)",
+          "oklch(26.43% 0.0188 305.0)",
+          "oklch(37.86% 0.0188 305.0)",
+          "oklch(49.29% 0.0188 305.0)",
+          "oklch(60.71% 0.0188 305.0)",
+          "oklch(72.14% 0.0188 305.0)",
+          "oklch(83.57% 0.0188 305.0)",
+          "oklch(95% 0.0188 305.0)"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Raised Plum",
+        "canonical": "#211b27",
+        "tonalRamp": [
+          "oklch(15% 0.0242 307.3)",
+          "oklch(26.43% 0.0242 307.3)",
+          "oklch(37.86% 0.0242 307.3)",
+          "oklch(49.29% 0.0242 307.3)",
+          "oklch(60.71% 0.0242 307.3)",
+          "oklch(72.14% 0.0242 307.3)",
+          "oklch(83.57% 0.0242 307.3)",
+          "oklch(95% 0.0242 307.3)"
+        ]
+      },
+      "input": {
+        "role": "neutral",
+        "displayName": "Control Plum",
+        "canonical": "#2b2331",
+        "tonalRamp": [
+          "oklch(15% 0.0278 310.4)",
+          "oklch(26.43% 0.0278 310.4)",
+          "oklch(37.86% 0.0278 310.4)",
+          "oklch(49.29% 0.0278 310.4)",
+          "oklch(60.71% 0.0278 310.4)",
+          "oklch(72.14% 0.0278 310.4)",
+          "oklch(83.57% 0.0278 310.4)",
+          "oklch(95% 0.0278 310.4)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Plum Divider",
+        "canonical": "#443849",
+        "tonalRamp": [
+          "oklch(15% 0.0328 315.9)",
+          "oklch(26.43% 0.0328 315.9)",
+          "oklch(37.86% 0.0328 315.9)",
+          "oklch(49.29% 0.0328 315.9)",
+          "oklch(60.71% 0.0328 315.9)",
+          "oklch(72.14% 0.0328 315.9)",
+          "oklch(83.57% 0.0328 315.9)",
+          "oklch(95% 0.0328 315.9)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Lavender Gray",
+        "canonical": "#b8a9bf",
+        "tonalRamp": [
+          "oklch(15% 0.0352 315.2)",
+          "oklch(26.43% 0.0352 315.2)",
+          "oklch(37.86% 0.0352 315.2)",
+          "oklch(49.29% 0.0352 315.2)",
+          "oklch(60.71% 0.0352 315.2)",
+          "oklch(72.14% 0.0352 315.2)",
+          "oklch(83.57% 0.0352 315.2)",
+          "oklch(95% 0.0352 315.2)"
+        ]
+      },
+      "pink": {
+        "role": "primary",
+        "displayName": "osu! Pink",
+        "canonical": "#ff66aa",
+        "tonalRamp": [
+          "oklch(15% 0.1968 355.5)",
+          "oklch(26.43% 0.1968 355.5)",
+          "oklch(37.86% 0.1968 355.5)",
+          "oklch(49.29% 0.1968 355.5)",
+          "oklch(60.71% 0.1968 355.5)",
+          "oklch(72.14% 0.1968 355.5)",
+          "oklch(83.57% 0.1968 355.5)",
+          "oklch(95% 0.1968 355.5)"
+        ]
+      },
+      "cyan": {
+        "role": "secondary",
+        "displayName": "Clear Cyan",
+        "canonical": "#58d7df",
+        "tonalRamp": [
+          "oklch(15% 0.1114 201.0)",
+          "oklch(26.43% 0.1114 201.0)",
+          "oklch(37.86% 0.1114 201.0)",
+          "oklch(49.29% 0.1114 201.0)",
+          "oklch(60.71% 0.1114 201.0)",
+          "oklch(72.14% 0.1114 201.0)",
+          "oklch(83.57% 0.1114 201.0)",
+          "oklch(95% 0.1114 201.0)"
+        ]
+      },
+      "lime": {
+        "role": "secondary",
+        "displayName": "Mint",
+        "canonical": "#82ddb4",
+        "tonalRamp": [
+          "oklch(15% 0.1059 163.5)",
+          "oklch(26.43% 0.1059 163.5)",
+          "oklch(37.86% 0.1059 163.5)",
+          "oklch(49.29% 0.1059 163.5)",
+          "oklch(60.71% 0.1059 163.5)",
+          "oklch(72.14% 0.1059 163.5)",
+          "oklch(83.57% 0.1059 163.5)",
+          "oklch(95% 0.1059 163.5)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Warm White",
+        "canonical": "#f5edf4",
+        "tonalRamp": [
+          "oklch(15% 0.0126 329.6)",
+          "oklch(26.43% 0.0126 329.6)",
+          "oklch(37.86% 0.0126 329.6)",
+          "oklch(49.29% 0.0126 329.6)",
+          "oklch(60.71% 0.0126 329.6)",
+          "oklch(72.14% 0.0126 329.6)",
+          "oklch(83.57% 0.0126 329.6)",
+          "oklch(95% 0.0126 329.6)"
+        ]
+      },
+      "purple": {
+        "role": "tertiary",
+        "displayName": "Soft Lavender",
+        "canonical": "#a88be8",
+        "tonalRamp": [
+          "oklch(15% 0.1356 297.1)",
+          "oklch(26.43% 0.1356 297.1)",
+          "oklch(37.86% 0.1356 297.1)",
+          "oklch(49.29% 0.1356 297.1)",
+          "oklch(60.71% 0.1356 297.1)",
+          "oklch(72.14% 0.1356 297.1)",
+          "oklch(83.57% 0.1356 297.1)",
+          "oklch(95% 0.1356 297.1)"
+        ]
+      },
+      "primary-ink": {
+        "role": "primary",
+        "displayName": "Plum Ink",
+        "canonical": "#331423",
+        "tonalRamp": [
+          "oklch(15% 0.0543 351.6)",
+          "oklch(26.43% 0.0543 351.6)",
+          "oklch(37.86% 0.0543 351.6)",
+          "oklch(49.29% 0.0543 351.6)",
+          "oklch(60.71% 0.0543 351.6)",
+          "oklch(72.14% 0.0543 351.6)",
+          "oklch(83.57% 0.0543 351.6)",
+          "oklch(95% 0.0543 351.6)"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Rose Highlight",
+        "canonical": "#ff89bd",
+        "tonalRamp": [
+          "oklch(15% 0.1534 353.5)",
+          "oklch(26.43% 0.1534 353.5)",
+          "oklch(37.86% 0.1534 353.5)",
+          "oklch(49.29% 0.1534 353.5)",
+          "oklch(60.71% 0.1534 353.5)",
+          "oklch(72.14% 0.1534 353.5)",
+          "oklch(83.57% 0.1534 353.5)",
+          "oklch(95% 0.1534 353.5)"
+        ]
+      },
+      "control-hover": {
+        "role": "neutral",
+        "displayName": "Control Lift",
+        "canonical": "#49364a",
+        "tonalRamp": [
+          "oklch(15% 0.0421 324.8)",
+          "oklch(26.43% 0.0421 324.8)",
+          "oklch(37.86% 0.0421 324.8)",
+          "oklch(49.29% 0.0421 324.8)",
+          "oklch(60.71% 0.0421 324.8)",
+          "oklch(72.14% 0.0421 324.8)",
+          "oklch(83.57% 0.0421 324.8)",
+          "oklch(95% 0.0421 324.8)"
+        ]
+      },
+      "field-hover": {
+        "role": "neutral",
+        "displayName": "Field Edge",
+        "canonical": "#8b6f8e",
+        "tonalRamp": [
+          "oklch(15% 0.0571 323.1)",
+          "oklch(26.43% 0.0571 323.1)",
+          "oklch(37.86% 0.0571 323.1)",
+          "oklch(49.29% 0.0571 323.1)",
+          "oklch(60.71% 0.0571 323.1)",
+          "oklch(72.14% 0.0571 323.1)",
+          "oklch(83.57% 0.0571 323.1)",
+          "oklch(95% 0.0571 323.1)"
+        ]
+      },
+      "selected": {
+        "role": "neutral",
+        "displayName": "Pressed Plum",
+        "canonical": "#5b334d",
+        "tonalRamp": [
+          "oklch(15% 0.0687 341.5)",
+          "oklch(26.43% 0.0687 341.5)",
+          "oklch(37.86% 0.0687 341.5)",
+          "oklch(49.29% 0.0687 341.5)",
+          "oklch(60.71% 0.0687 341.5)",
+          "oklch(72.14% 0.0687 341.5)",
+          "oklch(83.57% 0.0687 341.5)",
+          "oklch(95% 0.0687 341.5)"
+        ]
+      },
+      "selected-ink": {
+        "role": "neutral",
+        "displayName": "Pink White",
+        "canonical": "#ffe4f2",
+        "tonalRamp": [
+          "oklch(15% 0.0346 345.1)",
+          "oklch(26.43% 0.0346 345.1)",
+          "oklch(37.86% 0.0346 345.1)",
+          "oklch(49.29% 0.0346 345.1)",
+          "oklch(60.71% 0.0346 345.1)",
+          "oklch(72.14% 0.0346 345.1)",
+          "oklch(83.57% 0.0346 345.1)",
+          "oklch(95% 0.0346 345.1)"
+        ]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Warm Peach",
+        "canonical": "#ffb59d",
+        "tonalRamp": [
+          "oklch(15% 0.0930 38.7)",
+          "oklch(26.43% 0.0930 38.7)",
+          "oklch(37.86% 0.0930 38.7)",
+          "oklch(49.29% 0.0930 38.7)",
+          "oklch(60.71% 0.0930 38.7)",
+          "oklch(72.14% 0.0930 38.7)",
+          "oklch(83.57% 0.0930 38.7)",
+          "oklch(95% 0.0930 38.7)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Rounded track title",
+        "purpose": "Comfortaa title outside the rotating record; desktop override above 960px."
+      },
+      "headline": {
+        "displayName": "Rail heading",
+        "purpose": "Nunito working section titles."
+      },
+      "title": {
+        "displayName": "Group title",
+        "purpose": "Compact tool groups."
+      },
+      "body": {
+        "displayName": "Working prose",
+        "purpose": "Readable descriptions; size is contextual in source."
+      },
+      "label": {
+        "displayName": "Field label",
+        "purpose": "Compact labels above controls."
+      },
+      "button": {
+        "displayName": "Action label",
+        "purpose": "Bold compact actions."
+      },
+      "code": {
+        "displayName": "Engine JSON",
+        "purpose": "Configuration and logs."
+      }
+    },
+    "shadows": [
+      {
+        "name": "record-body",
+        "value": "0 28px 50px #0008, inset 0 0 0 3px #6a5667",
+        "purpose": "Physical disc grounding."
+      },
+      {
+        "name": "record-label",
+        "value": "0 2px 7px #0009, inset 0 0 0 1px #ffffff30",
+        "purpose": "Tactile central label."
+      },
+      {
+        "name": "orbit-dot",
+        "value": "0 3px 12px #58d7df55",
+        "purpose": "Cyan orbit marker glow."
+      },
+      {
+        "name": "notice",
+        "value": "0 12px 40px #0006",
+        "purpose": "Temporary feedback."
+      }
+    ],
+    "motion": [
+      {
+        "name": "record-spin",
+        "value": "24s linear infinite",
+        "purpose": "Continuous disc rotation; animation switch pauses it independently of audio."
+      },
+      {
+        "name": "rail-enter",
+        "value": "0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Settle rails from translateY(8px) to zero when section changes."
+      },
+      {
+        "name": "button-hover",
+        "value": "background 0.15s, transform 0.15s",
+        "purpose": "Enabled buttons lift 1px."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "prefers-reduced-motion: reduce",
+        "purpose": "Removes all animation and transition; uses automatic scroll behavior."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile",
+        "value": "620px"
+      },
+      {
+        "name": "two-column",
+        "value": "960px"
+      },
+      {
+        "name": "desktop-stage",
+        "value": "961px"
+      },
+      {
+        "name": "compact-desktop",
+        "value": "1200px"
+      },
+      {
+        "name": "wide-desktop",
+        "value": "1600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Pink import and full-video actions.",
+      "html": "<button class=\"ds-primary\">Создать видео</button>",
+      "css": ".ds-primary{font-family:Nunito,sans-serif;cursor:pointer;transition:background .15s,transform .15s;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:9px;padding:10px 16px;font-size:14px;font-weight:800;background:var(--pink,#ff66aa);color:#331423;}.ds-primary:hover:enabled{background:#ff89bd;transform:translateY(-1px);}.ds-primary:focus-visible{outline:2px solid var(--cyan,#58d7df);outline-offset:4px;}.ds-primary:disabled{opacity:.4;cursor:not-allowed;}"
+    },
+    {
+      "name": "Secondary button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Compact preview and secondary actions; called ghost in source.",
+      "html": "<button class=\"ds-secondary\">Превью · 10 с</button>",
+      "css": ".ds-secondary{font-family:Nunito,sans-serif;cursor:pointer;transition:background .15s,transform .15s;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line,#443849);border-radius:9px;padding:10px 16px;font-size:14px;font-weight:800;background:var(--input,#2b2331);color:var(--text,#f5edf4);}.ds-secondary:hover:enabled{background:#49364a;transform:translateY(-1px);}.ds-secondary:focus-visible{outline:2px solid var(--cyan,#58d7df);outline-offset:4px;}.ds-secondary:disabled{opacity:.4;cursor:not-allowed;}"
+    },
+    {
+      "name": "Text action",
+      "kind": "button",
+      "refersTo": "button-text",
+      "description": "Quiet disclosure and utility actions.",
+      "html": "<button class=\"ds-text\">Экспорт</button>",
+      "css": ".ds-text{font-family:Nunito,sans-serif;cursor:pointer;transition:background .15s,transform .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:6px;padding:8px 4px;font-size:12px;color:var(--muted,#b8a9bf);background:transparent;}.ds-text:hover{color:var(--pink,#ff66aa);background:#ffffff06;}.ds-text:focus-visible{outline:2px solid var(--cyan,#58d7df);outline-offset:4px;}.ds-text:disabled{opacity:.4;cursor:not-allowed;}"
+    },
+    {
+      "name": "Text field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Video names and local source paths.",
+      "html": "<label class=\"ds-field\"><span>Название видео</span><input class=\"ds-input\" placeholder=\"Необязательно\"></label>",
+      "css": ".ds-field{display:block;font-family:Nunito,sans-serif;}.ds-field>span{display:block;color:var(--muted,#b8a9bf);font-size:13px;font-weight:600;margin-bottom:6px;}.ds-input{font-family:Nunito,sans-serif;width:100%;min-width:0;background:var(--input,#2b2331);color:var(--text,#f5edf4);border:1px solid var(--line,#443849);border-radius:7px;padding:9px 11px;font-size:14px;caret-color:var(--pink,#ff66aa);}.ds-input:hover{border-color:#8b6f8e;}.ds-input:focus-visible{outline:2px solid var(--cyan,#58d7df);outline-offset:4px;}.ds-input:disabled{opacity:.4;cursor:not-allowed;}"
+    },
+    {
+      "name": "App navigation",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Selected pink destination with a short underline.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Разделы приложения\"><button aria-current=\"page\">Создать</button><button>Очередь</button><button>Подключение</button></nav>",
+      "css": ".ds-nav{display:flex;gap:8px;padding-bottom:24px;}.ds-nav button{font-family:Nunito,sans-serif;cursor:pointer;transition:background .15s,transform .15s;position:relative;border:0;background:transparent;padding:11px 19px;border-radius:8px;font-size:15px;font-weight:800;color:var(--muted,#b8a9bf);}.ds-nav button:hover{color:var(--text,#f5edf4);background:#ffffff08;}.ds-nav button[aria-current=page]{background:#ff66aa16;color:var(--pink,#ff66aa);}.ds-nav button[aria-current=page]:after{content:\"\";position:absolute;height:3px;bottom:-23px;left:24px;right:24px;background:var(--pink,#ff66aa);border-radius:3px;}.ds-nav button:focus-visible{outline:2px solid var(--cyan,#58d7df);outline-offset:4px;}.ds-nav button:disabled{opacity:.4;cursor:not-allowed;}"
+    },
+    {
+      "name": "Scenario tabs",
+      "kind": "custom",
+      "refersTo": "scenario-selected",
+      "description": "Replay or map source selection; selected state uses pressed plum.",
+      "html": "<div class=\"ds-scenario\"><button aria-pressed=\"true\">Реплеи</button><button aria-pressed=\"false\">Карта</button></div>",
+      "css": ".ds-scenario{display:flex;padding:4px;background:#2b2231;border-radius:10px;gap:4px;}.ds-scenario button{font-family:Nunito,sans-serif;cursor:pointer;transition:background .15s,transform .15s;flex:1;border:0;padding:9px 7px;border-radius:7px;background:transparent;color:var(--muted,#b8a9bf);font-size:14px;font-weight:800;}.ds-scenario button[aria-pressed=true]{background:#5b334d;color:#ffe4f2;}.ds-scenario button:focus-visible{outline:2px solid var(--cyan,#58d7df);outline-offset:4px;}.ds-scenario button:disabled{opacity:.4;cursor:not-allowed;}"
+    },
+    {
+      "name": "Expanded export container",
+      "kind": "card",
+      "refersTo": "expanded-export",
+      "description": "Occasional panel surface for detailed export, rather than the default working layout.",
+      "html": "<section class=\"ds-export\"><h2>Экспорт</h2><p>Параметры записи видео</p></section>",
+      "css": ".ds-export{font-family:Nunito,sans-serif;background:var(--panel,#211b27);color:var(--text,#f5edf4);padding:20px;border-radius:12px;max-width:650px;}.ds-export h2{margin:0 0 13px;font-size:17px;font-weight:800;line-height:1.25;}.ds-export p{margin:0;color:var(--muted,#b8a9bf);font-size:12px;line-height:1.6;}"
+    },
+    {
+      "name": "Music play control",
+      "kind": "button",
+      "description": "Circular playback action below the persistent record.",
+      "html": "<button class=\"ds-play\" aria-label=\"Слушать карту\"><svg width=\"21\" height=\"21\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"6 3 20 12 6 21 6 3\"/></svg></button>",
+      "css": ".ds-play{font-family:Nunito,sans-serif;cursor:pointer;transition:background .15s,transform .15s;display:grid;place-items:center;width:46px;height:46px;border:1px solid #ed67a270;border-radius:50%;color:var(--pink,#ff66aa);background:#382034;}.ds-play:hover:enabled{background:#56304b;}.ds-play:focus-visible{outline:2px solid var(--cyan,#58d7df);outline-offset:4px;}.ds-play:disabled{opacity:.4;cursor:not-allowed;}"
+    },
+    {
+      "name": "Procedural vinyl",
+      "kind": "custom",
+      "description": "Implemented record material without map artwork; live media and playback require the application runtime.",
+      "html": "<div class=\"ds-record\"><div class=\"ds-grooves\"></div><div class=\"ds-label\"><span>danser</span><b>STUDIO</b><small>osu!standard</small></div><div class=\"ds-spindle\"></div></div>",
+      "css": ".ds-record{position:relative;width:260px;height:260px;border-radius:50%;overflow:hidden;background:#101015;box-shadow:0 28px 50px #0008,inset 0 0 0 3px #6a5667;}.ds-grooves{position:absolute;inset:0;border-radius:50%;background:repeating-radial-gradient(circle at center,transparent 0px,transparent 1px,#0009 1.4px,#ddd3 1.8px,#0008 2.5px,transparent 3px),radial-gradient(circle,transparent 32%,#06060e22 65%,#06060eee 100%);box-shadow:inset 0 0 0 2px #ffffff3d;}.ds-label{position:absolute;inset:34%;display:flex;flex-direction:column;justify-content:center;gap:7px;border-radius:50%;background:#e45397;color:#2e1231;box-shadow:0 2px 7px #0009,inset 0 0 0 1px #ffffff30;text-align:center;}.ds-label>span{font:700 18px/1 Comfortaa,sans-serif;letter-spacing:-.03em;}.ds-label b{font-family:Nunito,sans-serif;font-size:12px;letter-spacing:.2em;}.ds-label small{font-family:Nunito,sans-serif;color:#531d3d;font-size:10px;}.ds-spindle{position:absolute;width:3%;height:3%;left:48.5%;top:48.5%;border-radius:50%;background:#19151f;border:2px solid #ffd5e6;box-shadow:0 1px 3px #000;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "ORBIT — the musical vinyl stage",
+    "overview": "The interface puts the selected track at the center of a working music studio. Rounded, expressive lettering and vivid osu! pink bring the pleasure of a rhythm game; dark plum surfaces, readable controls, and compact metadata support concentration. The identity is contemporary rather than retro, with cyan, mint, and lavender adding variety without acidic color.\n\nThe recurring signature is a large procedural vinyl record with grooves, reflections, approach rings, and a tonearm. Actual map artwork supplies the image when available. Surrounding tools change with the selected section while the record and music controls persist. Working areas use open rails and separators instead of a repeated card or glass template. The user-approved direction combines ORBIT's central composition with HARD CUT's expressiveness.",
+    "keyCharacteristics": [
+      "A persistent circular music stage with tactile vinyl material.",
+      "Vivid pink actions with cooler secondary accents on dark plum.",
+      "Friendly rounded typography and compact, factual controls.",
+      "Open working rails, restrained containers, and visible keyboard focus.",
+      "Gentle continuous motion with an explicit animation switch and reduced-motion support."
+    ],
+    "rules": [
+      {
+        "name": "The Accent Meaning Rule",
+        "body": "Keep primary actions pink, keyboard focus cyan, and success mint. Cursor palettes may vary independently because they encode actual attempts.",
+        "section": "colors"
+      },
+      {
+        "name": "The Exact Track Rule",
+        "body": "Keep the real title, artist, difficulty, creator, and exact-map identity readable. Decorative lettering must never replace these data.",
+        "section": "typography"
+      },
+      {
+        "name": "The Material Rule",
+        "body": "Reserve pronounced reflections and physical shadows for the vinyl stage. Keep tools quiet enough to read beside it.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** keep the persistent vinyl stage central to the studio identity while surrounding tools adapt to the selected section.",
+      "**Do** use actual map artwork and metadata for the exact selected map version, retaining visible grooves over the artwork.",
+      "**Do** preserve rounded expressive type, vivid pink actions, and cyan keyboard focus.",
+      "**Do** keep replay names and dates accessible in compact scrolling rows.",
+      "**Do** offer animation, volume, and mute controls and respect reduced-motion preference.",
+      "**Do** keep export presets compact and advanced settings accessible separately."
+    ],
+    "donts": [
+      "**Don't** introduce a retro, overly pastel, or acidic palette.",
+      "**Don't** replace the working rails with a repeated card or glass template.",
+      "**Don't** fabricate map art, replay results, players, dates, or readiness states.",
+      "**Don't** start loud or automatic music playback when a map is selected.",
+      "**Don't** substitute another map version with the same title or hide its difficulty identity.",
+      "**Don't** bundle local map media or rely on external font servers."
+    ]
+  }
+}
