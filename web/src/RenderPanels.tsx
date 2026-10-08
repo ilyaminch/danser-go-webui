@@ -486,18 +486,30 @@ export function LaunchPanel({
           ["cursors", "Mirror: курсоры"],
           ["tag", "TAG: курсоры"],
           ["screenshotTime", "Момент снимка, с"],
-          ["cs", "CS"],
-          ["ar", "AR"],
-          ["od", "OD"],
-          ["hp", "HP"],
+          ["cs", "CS — размер кругов", "Выше значение — меньше круги."],
+          [
+            "ar",
+            "AR — скорость появления",
+            "Выше значение — меньше времени на чтение объектов.",
+          ],
+          [
+            "od",
+            "OD — точность попаданий",
+            "Выше значение — строже оценка попадания по времени.",
+          ],
+          [
+            "hp",
+            "HP — сложность удержания здоровья",
+            "Выше значение — требовательнее шкала здоровья.",
+          ],
         ]
           .filter(
             ([key]) =>
-              !["cursors", "tag"].includes(key) ||
+              !["cursors", "tag", "cs", "ar", "od", "hp"].includes(key) ||
               ["dance", "autoplay"].includes(project.kind),
           )
-          .map(([key, label]) => (
-            <FieldLabel label={label} key={key}>
+          .map(([key, label, hint]) => (
+            <FieldLabel label={label} key={key} hint={hint}>
               <input
                 type="number"
                 step="any"
@@ -517,7 +529,7 @@ export function LaunchPanel({
         <>
           <FieldLabel
             label="Моды classic"
-            hint="Переопределяет моды одиночного реплея. Например HDHR."
+            hint="Моды визуализации карты. Например HDHR."
           >
             <input
               value={project.launch.mods ?? ""}
@@ -552,8 +564,9 @@ export function LaunchPanel({
         />
       ))}
       <p className="note">
-        CS/AR/OD/HP зависят от сценария и DA. Сравнение сохраняет исходные моды
-        попыток. Mirror и TAG управляют автоматическими курсорами.
+        {project.kind === "comparison"
+          ? "Сложность берётся из карты и исходных модов каждой попытки, включая Difficulty Adjust."
+          : "CS/AR/OD/HP изменяют сложность визуализации карты. Пустое поле сохраняет значение карты с выбранными модами. Mirror и TAG управляют автоматическими курсорами."}
       </p>
     </section>
   );
