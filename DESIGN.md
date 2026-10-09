@@ -26,24 +26,24 @@ typography:
     fontWeight: 700
     lineHeight: 1.35
   headline:
-    fontFamily: "Nunito, sans-serif"
+    fontFamily: "Exo 2, sans-serif"
     fontSize: "21px"
     fontWeight: 800
     lineHeight: 1.25
   title:
-    fontFamily: "Nunito, sans-serif"
+    fontFamily: "Exo 2, sans-serif"
     fontSize: "16px"
     fontWeight: 800
     lineHeight: 1.25
   body:
-    fontFamily: "Nunito, sans-serif"
+    fontFamily: "Exo 2, sans-serif"
     lineHeight: 1.6
   label:
-    fontFamily: "Nunito, sans-serif"
+    fontFamily: "Exo 2, sans-serif"
     fontSize: "13px"
     fontWeight: 600
   button:
-    fontFamily: "Nunito, sans-serif"
+    fontFamily: "Exo 2, sans-serif"
     fontSize: "14px"
     fontWeight: 800
   code:
@@ -159,9 +159,9 @@ The palette uses luminous accents against warm plum neutrals; normative values l
 
 ## Typography
 
-**Display Font:** Comfortaa, with sans-serif fallback. **Body Font:** Nunito, with sans-serif fallback. **Code Font:** Consolas, with monospace fallback.
+**Display Font:** Comfortaa, with sans-serif fallback. **Body Font:** Exo 2, with sans-serif fallback. **Code Font:** Consolas, with monospace fallback.
 
-Both rounded families are self-hosted variable fonts with included SIL OFL licenses. Comfortaa gives the brand, record label, and track title their expressive round silhouette; Nunito carries dense working text, controls, and metadata. Source assets and licensing are recorded in `web/public/ASSETS.md`.
+Both rounded families are self-hosted variable fonts with included SIL OFL licenses. Comfortaa gives the brand, record label, and track title their expressive round silhouette; Exo 2 carries dense working text, controls, and metadata. Source assets and licensing are recorded in `web/public/ASSETS.md`.
 
 ### Hierarchy
 - **Display:** the track title uses the frontmatter desktop role above 960px and drops to 20px at widths up to 960px. The final desktop override sets 22px, including large desktops. Keep long titles wrapping rather than truncating their identity.
@@ -169,7 +169,7 @@ Both rounded families are self-hosted variable fonts with included SIL OFL licen
 - **Title:** short group headings use the title role; job titles use 14px to fit the working rail.
 - **Body:** descriptive paragraphs use the body role; compact help text is commonly 12px and map descriptions 14px. There is no explicit global body font-size token.
 - **Label:** field labels use the label role. Supporting metadata ranges from 10px to 12px.
-- **Brand:** the Comfortaa wordmark is 25px, weight 700, with -0.03em tracking; its Nunito STUDIO suffix is 13px with 0.12em tracking.
+- **Brand:** the Comfortaa wordmark is 25px, weight 700, with -0.03em tracking; its Exo 2 STUDIO suffix is 13px with 0.12em tracking.
 - **Code:** logs and JSON use the code family; the editor uses the frontmatter code role.
 
 **The Exact Track Rule.** Keep the real title, artist, difficulty, creator, and exact-map identity readable. Decorative lettering must never replace these data.
@@ -247,3 +247,7 @@ Recommended resolution/frame-rate presets remain a compact select. Detailed enco
 - **Do** start music when a map is selected, respecting saved volume and mute; offer manual play when the browser blocks autoplay.
 - **Don't** substitute another map version with the same title or hide its difficulty identity.
 - **Don't** bundle local map media or rely on external font servers.
+
+## Full HD workspace refinement
+
+The primary viewport is fullscreen 1920 × 1080. On desktop (at least 1280 × 700), the app is a viewport-height workspace: export remains visible, rails scroll independently, and detailed export/engine editors open above the dock. The source and scene rails are 350px and 420px; the stage uses the remaining width. At smaller widths the existing stacked flow remains subordinate to this desktop composition. Queue uses a wide 650px job rail with its own scrolling and newest jobs first. Background circles belong to the turntable rather than fixed coordinates in the SVG. Body/input text is 16px with 14px compact help; Exo 2 is the interface face and Comfortaa remains only in the wordmark/vinyl branding. Replay search/filter and folder import controls are removed at the user request; replay details, selection and individual colors remain. Redundant palette/comparison tips are removed.

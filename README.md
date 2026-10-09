@@ -8,7 +8,7 @@ Built on **[Wieku/danser-go](https://github.com/Wieku/danser-go)**. This is an u
 
 ## Features
 
-- Batch `.osr` import, duplicate detection, player/date filters, and replay groups.
+- Batch `.osr` import, duplicate detection, replay details, and replay groups.
 - Arbitrary color gradients ordered by replay date, per-player gradients, player colors, and manual overrides. Colors remain attached to the same replay when the engine sorts players or eliminates them.
 - All five native comparison modes: Combo Break, Max Combo, Replay Showcase, Vs Mode, and SS or Quit. Configure the minimum number of surviving players, initial grace period, revival, sorting, and the additional danser cursor.
 - Local maps from osu!stable Songs folders or osu!lazer storage. Replay imports and selections resolve the exact map using its MD5 hash.
@@ -27,7 +27,7 @@ The workspace is arranged around a persistent vinyl stage, with compact replay/m
 
 Selecting a map loads its background and audio from the filenames in the actual `.osu`, including read-only lazer resources. Music starts automatically when a map is selected, using the current volume and mute preferences (25% initially). If the browser blocks autoplay, use the play button. Volume, mute, language, and animation preferences stay in the browser tab session. Listening does not change the rendered video's audio. Missing artwork or music leaves the rendering workflow available.
 
-The vinyl grooves, reflections, and rhythm background are authored CSS/SVG. Fonts are bundled locally with their OFL licenses; see [`web/public/ASSETS.md`](web/public/ASSETS.md). The layout targets desktop 16:9 screens and stacks on narrow screens. Animation can be disabled and respects reduced-motion preferences.
+The vinyl grooves, reflections, and rhythm background are authored CSS/SVG. Exo 2 interface and Comfortaa branding fonts are bundled locally with their OFL licenses; see [`web/public/ASSETS.md`](web/public/ASSETS.md). The fullscreen 1920 × 1080 workspace keeps export visible and scrolls long panels independently; narrow screens use a stacked flow. Animation can be disabled and respects reduced-motion preferences.
 
 ## Requirements
 
@@ -70,7 +70,7 @@ Alternatively, start the built service using `npm start` from `web`. For fronten
 
 1. Open **Connection** (`Подключение`). Configure FFmpeg and either a stable Songs directory or a lazer storage root. The bundled Studio executable is detected automatically when present.
 2. For lazer, use **Find on this computer** (`Найти на компьютере`) and **Connect and refresh index** (`Подключить и обновить индекс`). A Songs directory is optional in this case. For stable, save the paths; importing replays looks up the map automatically.
-3. Drop `.osr` files into **Create video** or import a folder. All attempts must belong to **one exact map version**; mixed-map batches are rejected without importing any files. Attempts are selected automatically.
+3. Drop `.osr` files into **Create video** using the file picker. All attempts must belong to **one exact map version**; mixed-map batches are rejected without importing any files. Attempts are selected automatically.
 4. Choose a palette and comparison mode. Replay Showcase keeps attempts visible; Combo Break eliminates them on a combo break. Setting the minimum surviving players to zero allows every attempt to be eliminated.
 5. Optionally render a short preview, then create the video. Outputs and logs appear in the rendering queue. After successful full video creation, uploaded replay copies are deleted once queued jobs finish using them. Settings stay available for the next video within the same browser tab session.
 

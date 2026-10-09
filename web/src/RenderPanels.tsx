@@ -176,14 +176,6 @@ export function PalettePanel({
           )}
         </div>
       )}
-      <div className="tip">
-        <Sparkles size={16} />
-        <p>
-          {t(
-            "Цвет закреплён за попыткой. Ручной цвет можно задать в списке слева.",
-          )}
-        </p>
-      </div>
       <button
         className="text-button"
         onClick={() => updatePalette("overrides", {})}
@@ -276,14 +268,6 @@ export function RulesPanel({
           <option value="Accuracy">{t("По точности")}</option>
         </select>
       </FieldLabel>
-      <div className="tip">
-        <Activity size={16} />
-        <p>
-          {t(
-            "Combo Break убирает выбывшие попытки. Replay Showcase оставляет все курсоры видимыми.",
-          )}
-        </p>
-      </div>
     </section>
   );
 }

@@ -1,4 +1,10 @@
 @font-face {
+  font-family: "Exo 2";
+  src: url("/fonts/exo2.ttf");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
   font-family: Nunito;
   src: url("/fonts/nunito.ttf");
   font-weight: 200 900;
@@ -11,7 +17,7 @@
   font-display: swap;
 }
 :root {
-  font-family: Nunito, sans-serif;
+  font-family: "Exo 2", sans-serif;
   color: #f5edf4;
   background: #17131c;
   --bg: #17131c;
@@ -95,7 +101,7 @@ p {
 }
 small {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 code,
 pre {
@@ -111,7 +117,7 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 7px;
   padding: 9px 11px;
-  font-size: 14px;
+  font-size: 16px;
 }
 input:hover,
 select:hover {
@@ -141,7 +147,7 @@ textarea {
   min-height: 90px;
 }
 summary {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1.5;
   padding: 10px 0;
@@ -199,8 +205,8 @@ details[open] > summary {
   letter-spacing: -0.03em;
 }
 .studio-brand b {
-  font-family: Nunito, sans-serif;
-  font-size: 13px;
+  font-family: "Exo 2", sans-serif;
+  font-size: 14px;
   letter-spacing: 0.12em;
   margin-left: 10px;
   color: var(--text);
@@ -248,7 +254,7 @@ details[open] > summary {
   gap: 22px;
 }
 .engine-indicator {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   display: flex;
   align-items: center;
@@ -270,7 +276,7 @@ details[open] > summary {
   background: transparent;
 }
 .queue-count {
-  font-size: 11px;
+  font-size: 13px;
   background: var(--pink);
   color: var(--bg);
   border-radius: 50%;
@@ -313,7 +319,7 @@ details[open] > summary {
   font-size: 24px;
 }
 .page-heading p {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
   margin-top: 10px;
 }
@@ -337,7 +343,7 @@ details[open] > summary {
   border-radius: 7px;
   background: transparent;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
 }
 .scenario-tabs button[aria-pressed="true"],
@@ -371,7 +377,7 @@ details[open] > summary {
   font-size: 17px;
 }
 .replay-drop p {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   margin: 7px 0 18px;
 }
@@ -391,7 +397,7 @@ details[open] > summary {
   background: var(--input);
   border-radius: 9px;
   padding: 10px 16px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
   text-decoration: none;
   transition:
@@ -423,7 +429,7 @@ details[open] > summary {
   background: transparent;
   color: var(--muted);
   padding: 8px 4px;
-  font-size: 12px;
+  font-size: 14px;
   text-decoration: none;
   border-radius: 6px;
 }
@@ -447,7 +453,7 @@ details[open] > summary {
 }
 .attempt-heading span {
   color: var(--pink);
-  font-size: 13px;
+  font-size: 14px;
 }
 .attempt-list {
   max-height: 30vh;
@@ -476,12 +482,12 @@ details[open] > summary {
 }
 .attempt-select b {
   display: block;
-  font-size: 14px;
+  font-size: 16px;
   overflow-wrap: anywhere;
 }
 .attempt-select small {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   margin-top: 3px;
 }
 .attempt:not(.selected) {
@@ -490,17 +496,17 @@ details[open] > summary {
 .attempt details {
   grid-column: 1/-1;
   margin-left: 27px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .attempt summary {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   padding: 0;
   color: var(--muted);
 }
 .attempt p {
   overflow-wrap: anywhere;
-  font-size: 12px;
+  font-size: 14px;
   margin: 8px 0;
 }
 .attempt .swatch {
@@ -518,7 +524,7 @@ details[open] > summary {
   padding: 12px 0;
   display: grid;
   gap: 10px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .workflow-card {
   min-width: 0;
@@ -534,13 +540,13 @@ details[open] > summary {
   padding-top: 20px;
 }
 .map-summary p {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
   margin: 10px 0;
 }
 .map-summary small {
   display: block;
-  font-size: 10px;
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
 .field {
@@ -549,14 +555,14 @@ details[open] > summary {
 }
 .field > span {
   display: block;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
   margin-bottom: 6px;
   font-weight: 600;
 }
 .field small {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   margin-top: 6px;
   line-height: 1.5;
 }
@@ -567,14 +573,14 @@ details[open] > summary {
 }
 .note,
 .tip {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   line-height: 1.6;
   margin: 10px 0 18px;
 }
 .warning {
   color: #ffb59d;
-  font-size: 13px;
+  font-size: 14px;
 }
 .section-title {
   display: flex;
@@ -602,11 +608,11 @@ details[open] > summary {
 }
 .toggle-row span {
   display: block;
-  font-size: 13px;
+  font-size: 14px;
 }
 .toggle-row small {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   margin-top: 3px;
   line-height: 1.5;
 }
@@ -621,7 +627,7 @@ details[open] > summary {
 .gradient-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
   margin: 6px 0 12px;
 }
@@ -676,7 +682,7 @@ details[open] > summary {
 }
 .session-note {
   color: #c896b1;
-  font-size: 11px;
+  font-size: 13px;
   margin-top: 28px;
   border-top: 1px solid #ffffff0d;
   padding-top: 14px;
@@ -692,7 +698,7 @@ details[open] > summary {
   align-items: center;
   gap: 10px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
   padding: 0 16px;
 }
 .stage-heading > svg {
@@ -708,6 +714,15 @@ details[open] > summary {
   margin: 18px auto 22px;
   display: grid;
   place-items: center;
+}
+.turntable:before {
+  content: "";
+  position: absolute;
+  inset: -7%;
+  border: 1px solid #96628b28;
+  border-radius: 50%;
+  box-shadow: 0 0 0 24px #96628b0b;
+  pointer-events: none;
 }
 .vinyl-disc {
   position: relative;
@@ -769,12 +784,12 @@ details[open] > summary {
   letter-spacing: -0.03em;
 }
 .vinyl-label b {
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.2em;
 }
 .vinyl-label small {
   color: #531d3d;
-  font-size: 10px;
+  font-size: 13px;
 }
 .spindle {
   position: absolute;
@@ -881,7 +896,7 @@ details[open] > summary {
 }
 .track-title p {
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
   margin-top: 9px;
 }
 .track-title small {
@@ -920,7 +935,7 @@ details[open] > summary {
   display: flex;
   gap: 10px;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
   margin-bottom: 3px;
 }
@@ -931,7 +946,7 @@ details[open] > summary {
 }
 .volume-control > span {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
   margin-bottom: 3px;
 }
@@ -973,7 +988,7 @@ details[open] > summary {
 }
 .render-requirement {
   width: 100%;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
 }
 .export-expanded {
@@ -1006,7 +1021,7 @@ details[open] > summary {
   padding: 10px;
   border-radius: 7px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 .settings-nav button.active {
   background: #ff66aa20;
@@ -1050,12 +1065,12 @@ details[open] > summary {
   max-width: 650px;
 }
 .schema-field label {
-  font-size: 14px;
+  font-size: 16px;
 }
 .schema-field code,
 .schema-field small {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   margin-top: 5px;
   overflow-wrap: anywhere;
   color: var(--muted);
@@ -1091,11 +1106,11 @@ details[open] > summary {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .health-grid small {
   margin-left: auto;
-  font-size: 11px;
+  font-size: 13px;
 }
 .lazer-connection,
 .credentials-panel {
@@ -1150,16 +1165,16 @@ details[open] > summary {
   justify-content: space-between;
 }
 .job-body h3 {
-  font-size: 14px;
+  font-size: 16px;
   overflow-wrap: anywhere;
 }
 .job-body p {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   margin: 7px 0;
 }
 .job-status {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--muted);
 }
 .job-status.completed {
@@ -1182,7 +1197,7 @@ details[open] > summary {
   position: absolute;
   right: 0;
   top: 8px;
-  font-size: 10px;
+  font-size: 13px;
 }
 .danger {
   color: #ffb59d;
@@ -1198,7 +1213,7 @@ details[open] > summary {
   font-size: 17px;
 }
 .empty-library p {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   margin: 10px 0;
 }
@@ -1238,7 +1253,7 @@ details[open] > summary {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.5;
   margin-top: 15px;
 }
@@ -1260,7 +1275,7 @@ details[open] > summary {
   padding: 14px 20px;
   border-radius: 10px;
   box-shadow: 0 12px 40px #0006;
-  font-size: 14px;
+  font-size: 16px;
 }
 .toast.error {
   background: #56312f;
@@ -1281,14 +1296,14 @@ details[open] > summary {
   align-items: center;
   border-radius: 20px;
   padding: 10px 20px;
-  font-size: 13px;
+  font-size: 14px;
 }
 .studio-credit {
   display: flex;
   justify-content: space-between;
   padding: 18px 3.2vw;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
 }
 .studio-credit a {
   color: var(--muted);
@@ -1390,7 +1405,7 @@ details[open] > summary {
     gap: 15px;
   }
   .studio-header nav button {
-    font-size: 13px;
+    font-size: 14px;
     padding: 10px;
   }
   .studio-brand span {
@@ -1469,7 +1484,7 @@ details[open] > summary {
   .render-actions .button {
     flex: 1;
     padding: 11px 8px;
-    font-size: 13px;
+    font-size: 14px;
   }
   .advanced {
     margin: 16px 18px;
@@ -1506,11 +1521,11 @@ details[open] > summary {
     width: 80px;
   }
   .track-progress > div {
-    font-size: 10px;
+    font-size: 13px;
   }
   .studio-credit {
     padding: 20px 18px;
-    font-size: 10px;
+    font-size: 13px;
   }
   .toast {
     top: 140px;
@@ -1537,3 +1552,240 @@ details[open] > summary {
     scroll-behavior: auto !important;
   }
 }
+
+/* Full HD is the primary workspace: controls stay on screen, panels own overflow. */
+@media (min-width: 1280px) and (min-height: 700px) {
+  .studio-app {
+    height: 100dvh;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .studio-header {
+    flex-shrink: 0;
+    padding: 14px 32px;
+    gap: 36px;
+  }
+  .studio-header nav button[aria-current="page"]:after {
+    bottom: -15px;
+  }
+  .studio-layout {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    max-width: none;
+    grid-template-columns: 350px minmax(0, 1fr) 420px;
+    gap: 28px;
+    padding: 22px 32px 16px;
+    align-items: stretch;
+  }
+  .source-rail,
+  .scene-rail {
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    padding-bottom: 12px;
+  }
+  .source-rail {
+    padding-right: 18px;
+  }
+  .scene-rail {
+    padding-left: 18px;
+  }
+  .source-rail > h2,
+  .scene-rail > h2 {
+    margin-bottom: 16px;
+  }
+  .vinyl-stage {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+  .stage-heading {
+    width: 100%;
+    flex-shrink: 0;
+  }
+  .turntable {
+    width: min(100%, calc(100dvh - 520px), 680px);
+    margin: 0 auto;
+    flex-shrink: 0;
+  }
+  .track-title {
+    width: 100%;
+    margin: 0;
+  }
+  .track-title h1 {
+    font-family: "Exo 2", sans-serif;
+    font-size: 28px;
+    line-height: 1.2;
+  }
+  .track-title p {
+    margin-top: 5px;
+    font-size: 16px;
+  }
+  .track-title small {
+    margin-top: 3px;
+    font-size: 14px;
+  }
+  .music-player {
+    width: 100%;
+    max-width: 650px;
+    margin: 4px 0 0;
+    padding: 10px 0;
+    flex-shrink: 0;
+  }
+  .replay-drop {
+    padding: 16px;
+    gap: 10px;
+  }
+  .attempt-heading {
+    margin: 18px 0 12px;
+  }
+  .attempt-list {
+    max-height: 30vh;
+  }
+  .map-strip {
+    margin-top: 20px;
+    padding-top: 18px;
+  }
+  .workflow-card {
+    padding: 16px 0;
+  }
+  .field {
+    margin-bottom: 14px;
+  }
+  .export-dock {
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    margin: 0 32px;
+    padding: 14px 0;
+    gap: 20px;
+    position: relative;
+  }
+  .export-dock > .field {
+    max-width: 340px;
+  }
+  .export-dock .render-actions {
+    flex-shrink: 0;
+  }
+  .render-requirement {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    font-size: 13px;
+  }
+  .export-dock:has(.render-requirement) {
+    padding-bottom: 24px;
+  }
+  .export-expanded {
+    position: fixed;
+    z-index: 12;
+    right: 32px;
+    bottom: 220px;
+    width: 620px;
+    max-height: calc(100dvh - 320px);
+    overflow: auto;
+    margin: 0;
+    border: 1px solid var(--line);
+    box-shadow: 0 18px 48px #0008;
+  }
+  .advanced {
+    flex-shrink: 0;
+    margin: 0 32px;
+    padding: 6px 0;
+  }
+  .advanced[open] {
+    position: fixed;
+    z-index: 15;
+    inset: 92px 32px 220px;
+    margin: 0;
+    overflow: auto;
+    padding: 18px 24px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 18px 48px #0008;
+  }
+  .advanced[open] > summary {
+    position: sticky;
+    top: -18px;
+    background: var(--bg);
+    z-index: 2;
+    padding: 14px 0;
+  }
+  .studio-credit {
+    flex-shrink: 0;
+    padding: 8px 32px;
+  }
+  .workspace-queue .studio-layout {
+    grid-template-columns: minmax(520px, 650px) minmax(0, 1fr);
+  }
+  .workspace-queue .scene-rail {
+    display: none;
+  }
+  .workspace-queue .source-rail {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .workspace-queue .page-heading {
+    flex-shrink: 0;
+    margin-bottom: 16px;
+  }
+  .workspace-queue .page-heading p {
+    padding: 0;
+    font-size: 15px;
+  }
+  .workspace-queue .jobs {
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding-right: 12px;
+    scrollbar-gutter: stable;
+  }
+  .job-card {
+    padding: 18px 0;
+  }
+  .job-body h3 {
+    font-size: 18px;
+  }
+  .job-body p,
+  .job-status {
+    font-size: 14px;
+  }
+  .job-actions {
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+}
+:root {
+  font-size: 16px;
+}
+.field > span,
+.field > label,
+.field > small,
+.note,
+.tip,
+.attempt small,
+.text-button {
+  font-size: 14px;
+}
+input,
+select {
+  font-size: 16px;
+}
+
+@media (max-width: 960px) {
+  .turntable:before {
+    inset: 0;
+    box-shadow: none;
+  }
+}
+
+@media (max-width:960px) { .turntable { overflow:clip; } }
