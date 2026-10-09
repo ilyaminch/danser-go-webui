@@ -122,7 +122,6 @@ export function VinylStage({
           <div className="vinyl-grooves" />
           <div className="vinyl-label">
             {media.background && <img src={media.background} alt="" />}
-            <span className="label-artist">{map?.artist}</span>
             <i className="label-ring" />
           </div>
           <div className="spindle" />

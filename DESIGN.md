@@ -8,7 +8,6 @@ colors:
   line: "#443849"
   muted: "#b8a9bf"
   pink: "#ff66aa"
-  cyan: "#58d7df"
   lime: "#82ddb4"
   text: "#f5edf4"
   purple: "#a88be8"
@@ -121,7 +120,7 @@ components:
 
 **Creative North Star: "ORBIT — the musical vinyl stage"**
 
-The interface puts the selected track at the center of a working music studio. Rounded, expressive lettering and vivid osu! pink bring the pleasure of a rhythm game; dark plum surfaces, readable controls, and compact metadata support concentration. The identity is contemporary rather than retro, with cyan, mint, and lavender adding variety without acidic color.
+The interface puts the selected track at the center of a working music studio. Rounded, expressive lettering and vivid osu! pink bring the pleasure of a rhythm game; dark plum surfaces, readable controls, and compact metadata support concentration. The identity is contemporary rather than retro, with restrained neutral reflections supporting the vivid pink accent.
 
 The recurring signature is a large procedural vinyl record with grooves, reflections, approach rings, and a tonearm. Actual map artwork supplies the image when available. Surrounding tools change with the selected section while the record and music controls persist. Working areas use open rails and separators instead of a repeated card or glass template. The user-approved direction combines ORBIT's central composition with HARD CUT's expressiveness.
 
@@ -254,4 +253,4 @@ The primary viewport is fullscreen 1920 × 1080. On desktop (at least 1280 × 70
 
 Music preview starts at the selected .osu PreviewTime (milliseconds). Missing, negative, malformed or out-of-track values fall back to 40% of the map end time, capped by audio duration; if map timing is unavailable, audio duration is used. Seeking occurs after audio metadata loads, before autoplay. This affects listening only, not video export.
 
-Music seeking now lives in a thin cyan strip below the header, with elapsed/total time and a keyboard-accessible slider. Play/pause, mute and volume sit at the scene edge. The larger record uses wider, low-contrast groove bands and neutral reflections; its cyan paper label uses actual map artwork and artist metadata instead of product branding. Pink remains the primary action accent, while cyan identifies music controls. On narrow screens audio controls form a compact row above the record.
+Music seeking lives in a thin pink strip below the header, with elapsed/total time and a keyboard-accessible slider. Play/pause, mute and volume sit at the scene edge. On Full HD the larger record owns the scene height and map metadata sits at the upper left. Fine 4.5px grooves retain neutral reflections; the center uses untinted map artwork with a dark spindle surround and no rotating text or product branding. Pink remains the action and music accent; the cyan music treatment was removed at the user request. On narrow screens audio controls form a compact row above the record.
