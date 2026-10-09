@@ -1,162 +1,186 @@
-# Danser Studio — danser-go Web UI
+# Danser Studio
 
-A local web interface for comparing osu!standard replays and rendering them into videos. Import attempts recorded on different dates, include friends' replays, assign cursor colors, and choose whether players remain visible or are eliminated.
+Локальное веб-приложение для создания видео osu!standard на базе [danser-go](https://github.com/Wieku/danser-go). Загрузите реплеи или выберите карту, настройте курсоры и оформление, при необходимости создайте превью, затем запишите видео.
 
-Built on **[Wieku/danser-go](https://github.com/Wieku/danser-go)**. This is an unofficial companion project with a modified copy of the engine, not an official danser-go release. The vendored engine is based on upstream commit `2fc4c8931ff4446a411b0094d7d7b4ede82c61c4` and retains its original documentation and credits in [`danser-go/`](danser-go/README.md).
+Интерфейс доступен на русском и английском. Основной сценарий использования — браузер на ПК с экраном 1920 × 1080. Для узких экранов предусмотрена адаптивная раскладка.
 
-**Version 0.2.0** is the functional baseline before the frontend redesign. It remains an early working release with the setup requirements and limitations documented below. The `v0.2.0` Git tag preserves this version.
+Проект неофициальный и содержит модифицированный движок. Его исходная документация и авторство сохранены в [danser-go/README.md](danser-go/README.md). Тег `v0.2.0` сохраняет функциональную версию до редизайна; текущие ветки уже содержат новый интерфейс.
 
-## Features
+## Возможности
 
-- Batch `.osr` import, duplicate detection, replay details, and replay groups.
-- Arbitrary color gradients ordered by replay date, per-player gradients, player colors, and manual overrides. Colors remain attached to the same replay when the engine sorts players or eliminates them.
-- All five native comparison modes: Combo Break, Max Combo, Replay Showcase, Vs Mode, and SS or Quit. Configure the minimum number of surviving players, initial grace period, revival, sorting, and the additional danser cursor.
-- Local maps from osu!stable Songs folders or osu!lazer storage. Replay imports and selections resolve the exact map using its MD5 hash.
-- One render workspace with colors, elimination, export, launch options, skin selection, and the complete engine settings editor. Render settings remain in the browser tab session; no saved projects are created.
-- Local skin folders and `.osk` archives, plus manual `.osz` map import when the exact replay map is missing.
-- Rendering queue, progress and logs, cancellation and retry, short video previews, PNG screenshots, and MP4/MKV export.
-- Two scenarios selected by a switch: **Replay video** accepts one or more attempts of the same map; **Map visualization** offers Cursor Dance or autoplay with the gameplay interface, without replay uploads. A single attempt uses the same manifest workflow and danser automatically shows its score/combo interface. Classic folder knockout is not exposed.
-- CS, AR, OD, and HP overrides are available only for map visualization. Replay video preserves the map difficulty and each attempt's recorded mods, including Difficulty Adjust; saved visualization overrides are ignored for replay rendering.
-- Recording defaults: NVIDIA H.264 NVENC, preset p4, CQ 22, High profile, 1080p60 MP4, yuv420p, motion blur disabled, and no encoding speed cap. Select libx264 on computers without working NVENC. NVENC preset and quality are available beside the encoder.
+- **Видео по реплеям:** одна или несколько попыток одной точной версии карты. Импорт `.osr` через выбор файлов или перетаскивание, проверка дубликатов, ники, даты, моды и характеристики попыток.
+- **Визуализация карты:** Cursor Dance или Autoplay без загрузки реплеев.
+- Карты из Songs osu!stable, локального хранилища osu!lazer только для чтения или импортированного `.osz`. Для реплеев карта определяется по MD5.
+- Градиенты цветов по датам, цвета игроков, градиенты внутри каждого игрока и ручные цвета отдельных попыток.
+- Combo Break, Max Combo, Replay Showcase, Vs Mode и SS or Quit. Настройки выбывания, начального иммунитета, возвращения игроков и сортировки таблицы.
+- Скины из локальных папок и `.osk`, полный редактор настроек движка, импорт JSON-профиля.
+- Пресеты видео и подробные настройки экспорта. MP4/MKV, десятисекундное видеопревью и PNG-снимки.
+- Последовательная очередь рендера с прогрессом, журналами, отменой, просмотром результата и повтором при наличии исходных данных.
 
-The interface supports **Russian and English**, selectable in the header. Engine setting names and logs retain their original language. Windows is the tested platform.
+Реплеи сохраняют записанные моды. Переопределения CS/AR/OD/HP доступны только в визуализации карты.
 
-## Redesigned workspace
+## Требования
 
-The workspace is arranged around a persistent vinyl stage, with compact replay/map controls on the left and mode, cursor color, and skin controls on the right. Recommended video presets sit in the export dock; detailed encoding, timing, launch, JSON, and engine settings remain available in expandable sections.
+Проверенная платформа — **Windows x64**. Для запуска из исходников нужны:
 
-Selecting a map loads its background and audio from the filenames in the actual `.osu`, including read-only lazer resources. Music starts automatically when a map is selected, using the current volume and mute preferences (25% initially). If the browser blocks autoplay, use the play button. Volume, mute, language, and animation preferences stay in the browser tab session. Listening does not change the rendered video's audio. Missing artwork or music leaves the rendering workflow available.
+- Node.js **24 или новее** и npm;
+- FFmpeg и ffprobe;
+- собранный `danser-studio.exe`, ресурсы и нативные библиотеки движка;
+- локальная карта с её ресурсами, а для видео по реплеям — соответствующие `.osr`.
 
-The vinyl grooves, reflections, and rhythm background are authored CSS/SVG. Exo 2 interface and Comfortaa branding fonts are bundled locally with their OFL licenses; see [`web/public/ASSETS.md`](web/public/ASSETS.md). The fullscreen 1920 × 1080 workspace keeps export visible and scrolls long panels independently; narrow screens use a stacked flow. Animation can be disabled and respects reduced-motion preferences.
+Исполняемые файлы, зависимости и пользовательские данные не входят в репозиторий. Готового установщика пока нет.
 
-## Requirements
+## Установка и запуск
 
-- Windows x64 with graphics drivers capable of running danser-go.
-- Node.js **24 or newer** and npm.
-- FFmpeg and ffprobe, available on PATH or configured using an absolute FFmpeg path.
-- A Studio engine build and the supporting assets/native libraries from danser-go.
-- Local `.osr` files and the exact matching maps/resources.
-
-This repository contains source code. Generated executables, downloaded toolchains, dependencies, runtime files, and user data are excluded. A fresh clone needs the setup steps below; there is no installer yet.
-
-## Build and run on Windows
-
-1. Clone this repository and install/build the web application:
-
-   ```powershell
-   git clone https://github.com/ilyaminch/danser-go-webui.git
-   cd danser-go-webui
-   cd web
-   npm ci
-   npm run build
-   cd ..
-   ```
-
-2. Download the Windows x64 **0.12.0** archive from the [original danser-go releases](https://github.com/Wieku/danser-go/releases/tag/0.12.0) and extract its contents into a `runtime` folder in the repository root. Preserve its assets, native libraries, credits, and directory structure. The Studio build below creates a separate `runtime/danser-studio.exe`.
-
-3. Set up the portable engine build tools used by `Build-Engine.ps1`:
-
-   - Extract Windows x64 **Go 1.26.1** from [go.dev](https://go.dev/dl/) so that `.tools/go/bin/go.exe` exists.
-   - Extract an x64 **WinLibs GCC 16.2.0, POSIX, MSVCRT** toolchain from [WinLibs](https://winlibs.com/) so that `.tools/mingw64/bin/gcc.exe` exists. This is the toolchain tested by this project. The build script includes a workaround for its handling of paths containing spaces.
-   - Run `./Build-Engine.ps1` from PowerShell. It builds the Studio CLI, copies the required pthread library, and runs the engine checks. For other toolchain locations, adapt the paths in this script.
-
-4. To enable local lazer storage, install [.NET SDK 9 or newer](https://dotnet.microsoft.com/download) and run `./Build-LazerIndex.ps1`. It produces a self-contained Windows helper in `runtime/lazer-index`; users running that helper do not need a separate .NET runtime.
-
-5. Open **`Start-Studio.cmd`**. It starts the local service and opens **http://127.0.0.1:3000**. If the service is already running, it opens the existing instance. Startup logs are written to `web/data/server.stdout.log` and `server.stderr.log`.
-
-Alternatively, start the built service using `npm start` from `web`. For frontend development, use `npm run dev` from the same directory.
-
-## First video
-
-1. Open **Connection** (`Подключение`). Configure FFmpeg and either a stable Songs directory or a lazer storage root. The bundled Studio executable is detected automatically when present.
-2. For lazer, use **Find on this computer** (`Найти на компьютере`) and **Connect and refresh index** (`Подключить и обновить индекс`). A Songs directory is optional in this case. For stable, save the paths; importing replays looks up the map automatically.
-3. Drop `.osr` files into **Create video** using the file picker. All attempts must belong to **one exact map version**; mixed-map batches are rejected without importing any files. Attempts are selected automatically.
-4. Choose a palette and comparison mode. Replay Showcase keeps attempts visible; Combo Break eliminates them on a combo break. Setting the minimum surviving players to zero allows every attempt to be eliminated.
-5. Optionally render a short preview, then create the video. Outputs and logs appear in the rendering queue. After successful full video creation, uploaded replay copies are deleted once queued jobs finish using them. Settings stay available for the next video within the same browser tab session.
-
-To render without replays, turn on **Map visualization** (`Визуализация карты`), select Cursor Dance or Autoplay, and choose a locally indexed map or import a `.osz` archive. Cursor Dance generates automatic cursor movement; Autoplay uses the engine's automatic player and gameplay interface. Configure export settings and optionally preview before rendering.
-
-In map visualization, **CS** controls circle size (higher means smaller circles), **AR** controls how early objects appear (higher means less reading time), **OD** controls hit timing strictness, and **HP** controls health drain difficulty. Blank fields retain the map's values with the selected mods. These fields are hidden for replay video because the native comparison workflow does not apply launch-time difficulty overrides.
-
-## How lazer storage is used
-
-Studio treats lazer as a local reference library. It opens `client.realm` dynamically in **read-only mode**, without migrations or writes, and stores map metadata and resource references in its own SQLite database. Beatmaps, music, backgrounds, and videos are not copied into the repository.
-
-The storage root must contain `client.realm` and `files`; the usual Windows location is `%APPDATA%\osu`. Maps are matched by the MD5 recorded in the replay. A newer map with the same title is not substituted for a missing version. No API credentials are required for this local lookup.
-
-Because danser expects a conventional Songs layout, each lazer render creates a temporary directory in the system TEMP folder containing hard links to the selected map and its set's resources. These links refer to the existing data without duplicating file contents. They are removed after completion, failure, or cancellation. A service crash can leave temporary links behind. Across different drives, symbolic links are attempted; if Windows prohibits them, the job fails with an explanation rather than silently copying the files. Refresh the index after moving storage or updating maps.
-
-Lazer does not have ordinary Songs, Skins, or Replays directories: their contents share its hash-based storage. Connect the storage root rather than `files`. The connector currently resolves maps; import skins as `.osk` and replays as exported `.osr`. Lazer's `exports` folder contains files explicitly exported from the game, not every stored replay. Optional stable Songs and local skin directories remain under additional connection settings. The unused native-launcher replay-directory field is not exposed in the web interface.
-
-## Data and privacy
-
-The service binds to `127.0.0.1` and processes imports locally. Replay copies in `web/data/library` are temporary: a successful full render releases its selected copies after other queued jobs finish using them. Preview, failure, or cancellation alone does not delete replays. Original files are never moved or deleted. **New render** clears uploaded copies while retaining settings, and is unavailable until pending jobs finish.
-
-Render settings are kept in browser `sessionStorage`, survive page refreshes, and are not saved as projects. Jobs retain a settings snapshot while queued or retryable; when their replays are cleaned, that snapshot and retry are removed. Engine settings and job manifests are removed after every job. Completed videos, job logs, map indexes, local connection paths, and imported map/skin assets remain available. Imported `.osk` files are unpacked into a managed skin directory; external skin folders are referenced directly.
-
-API secrets are stored separately in the engine's `settings/credentials.json`. The engine may contact osu! services for features that use online data. User data, videos, and managed assets are excluded from Git. Data left by older versions is not automatically purged on upgrade; use **New render** to clear old replay copies.
-
-## Development and validation
+### 1. Соберите веб-приложение
 
 ```powershell
+git clone https://github.com/ilyaminch/danser-go-webui.git
+cd danser-go-webui
 cd web
+npm ci
+npm run build
+cd ..
+```
+
+### 2. Подготовьте движок
+
+Скачайте Windows x64 архив [danser-go 0.12.0](https://github.com/Wieku/danser-go/releases/tag/0.12.0) и распакуйте его содержимое в `runtime/` в корне проекта. Сохраните структуру каталогов, ресурсы, DLL и лицензионные уведомления.
+
+Для сборки модифицированного движка скрипт `Build-Engine.ps1` ожидает:
+
+| Инструмент | Расположение | Использованная при проверке версия |
+| --- | --- | --- |
+| Go | `.tools/go/bin/go.exe` | 1.26.1 |
+| WinLibs GCC, x64, POSIX, MSVCRT | `.tools/mingw64/bin/gcc.exe` | 16.2.0 |
+
+Go доступен на [go.dev](https://go.dev/dl/), GCC — на [WinLibs](https://winlibs.com/). При другом расположении инструментов измените пути в скрипте.
+
+Из корня проекта выполните:
+
+```powershell
+./Build-Engine.ps1
+```
+
+Скрипт создаёт `runtime/danser-studio.exe`, копирует необходимую pthread DLL и запускает проверки движка. Обычная сборка upstream не заменяет Studio CLI для работы с партиями реплеев.
+
+### 3. Подключите поддержку lazer, если она нужна
+
+Для сборки индексатора установите [.NET SDK 9 или новее](https://dotnet.microsoft.com/download) и выполните:
+
+```powershell
+./Build-LazerIndex.ps1
+```
+
+Результат находится в `runtime/lazer-index/`. Собранный помощник самодостаточен: отдельный .NET runtime для его запуска не нужен. Для работы только с Songs или `.osz` этот шаг не требуется.
+
+### 4. Запустите Studio
+
+Откройте `Start-Studio.cmd`. Скрипт запускает локальный сервис и открывает **http://127.0.0.1:3000**. Если сервис уже работает, открывается существующий экземпляр.
+
+Альтернативный запуск из каталога `web/`:
+
+```powershell
+npm start
+```
+
+В разделе **«Подключение»** укажите FFmpeg и источник карт. FFmpeg и ffprobe могут находиться в PATH; также можно задать абсолютный путь к FFmpeg. Собранный Studio CLI обнаруживается автоматически. Журналы запуска находятся в `web/data/server.stdout.log` и `web/data/server.stderr.log`.
+
+## Создание видео
+
+### По реплеям
+
+1. В разделе **«Создать»** выберите источник **«Реплеи»** и загрузите `.osr` через кнопку или перетаскивание.
+2. Проверьте найденную карту и список попыток. Все реплеи должны относиться к одной версии карты; смешанная партия отклоняется целиком. Если точная карта отсутствует, импортируйте её `.osz`.
+3. Выберите режим движка, цвета курсоров и скин. Replay Showcase сохраняет все курсоры видимыми; режимы выбывания имеют собственные настройки.
+4. Выберите пресет и при желании укажите название видео. Подробные параметры доступны в **«Экспорт»**, остальные настройки — в **«Все настройки движка»**.
+5. При необходимости создайте **«Превью · 10 с»**, затем нажмите **«Создать видео»**. Прогресс, журналы и результат появятся в **«Очередь»**.
+
+### Без реплеев
+
+Выберите источник **«Карта»**, режим Cursor Dance или Autoplay и локальную карту либо импортируйте `.osz`. Далее настройте оформление и экспорт так же, как для реплеев.
+
+CS/AR/OD/HP можно переопределить в параметрах прохождения. Пустые значения сохраняют параметры карты с учётом выбранных модов.
+
+Начальные параметры записи — 1080p60 MP4, H.264 NVENC, p4, CQ 22, High, yuv420p, без motion blur. Если NVENC недоступен, выберите libx264 в подробных настройках экспорта. Видеопревью записывается в 960 × 540, 30 fps, H.264/MP4.
+
+## Музыка карты
+
+Пластинка использует фон выбранной карты. Музыка запускается автоматически с `PreviewTime` из `.osu`. Если значение отсутствует, отрицательное, некорректное или выходит за длительность аудио, используется 40% времени до конца карты, ограниченного длительностью аудио. Если время конца карты неизвестно — 40% длительности аудио.
+
+Полоса под шапкой позволяет перематывать трек. Воспроизведение, громкость и выключение звука находятся у края сцены. Начальная громкость — 25%; громкость, mute и настройка анимации сохраняются в сессии вкладки. Если браузер блокирует автозапуск, нажмите кнопку воспроизведения.
+
+Прослушивание музыки не меняет звук и начало создаваемого видео. Анимацию можно отключить; учитывается системная настройка reduced motion. Отсутствие фона или аудио для прослушивания не скрывает инструменты рендера.
+
+## Карты из osu!lazer
+
+В **«Подключение»** выберите корень хранилища с `client.realm` и каталогом `files`, обычно `%APPDATA%\osu`. Можно воспользоваться кнопками **«Найти на компьютере»** и **«Подключить и обновить индекс»**. После перемещения хранилища или обновления карт обновите индекс.
+
+Индексатор открывает Realm только для чтения, без миграций и изменений. Метаданные и ссылки на ресурсы сохраняются в собственной базе Studio. Карта сопоставляется по MD5: другая версия с тем же названием не подставляется. Для локального поиска API-ключи не требуются.
+
+Для рендера создаётся временная структура Songs со ссылками на существующие ресурсы. На одном диске используются hard links, между дисками — symbolic links. Если Windows не разрешает создать ссылки, задание завершается с объяснением. После завершения, ошибки или отмены ссылки удаляются; авария сервиса может оставить их в TEMP.
+
+Коннектор lazer предоставляет карты и их ресурсы. Реплеи нужно экспортировать как `.osr`, скины — как `.osk`; напрямую из базы lazer они не импортируются.
+
+## Настройки и пользовательские данные
+
+- Параметры видео и язык сохраняются в `sessionStorage` вкладки и переживают обновление страницы. Сохранённых проектов и постоянной библиотеки реплеев нет.
+- Загруженные копии реплеев удаляются после успешного полного видео, когда они больше не нужны ожидающим или выполняющимся заданиям. Превью, ошибка и отмена сами по себе копии не удаляют. Исходные файлы пользователя не изменяются.
+- **«Новый рендер»** очищает загруженные копии, сохраняя настройки. Очистка недоступна, пока есть ожидающие или выполняющиеся задания.
+- Завершённые видео, журналы, индексы карт, пути подключения и импортированные карты/скины остаются доступны. Временные настройки и manifest-файлы задания удаляются после выполнения. Повтор недоступен после удаления необходимых реплеев.
+- Сервис слушает `127.0.0.1`; импорт выполняется локально. Учётные данные osu! хранятся отдельно в `settings/credentials.json` движка. Отдельные функции движка могут обращаться к сервисам osu!.
+
+Локальные данные, runtime, инструменты сборки, временные материалы и служебный контекст дизайна исключены из Git.
+
+## Разработка и проверки
+
+Из каталога `web/`:
+
+```powershell
+npm run dev
 npm test
 npm run build
 ```
 
-The Node tests cover replay parsing, palettes, persistence, settings merging, argument generation, and lazer reference/link handling. `Build-Engine.ps1` runs the relevant Go checks.
+`npm run dev` запускает сервис с интерфейсом Vite. Сервер принимает переменные `PORT` и `STUDIO_DATA_DIR` для отдельного экземпляра.
 
-With the engine, resources, FFmpeg, and ffprobe installed:
+При установленном движке, ресурсах, FFmpeg и ffprobe доступны интеграционные проверки:
 
 ```powershell
-cd web
 node test/integration.mjs
 node test/integration.mjs --manual
 node test/lazer-integration.mjs "C:\path\to\lazer-storage"
 ```
 
-Set `STUDIO_TEST_FFMPEG` to a full FFmpeg path if it is not on PATH. The standard integration test uses a generated map and replays. The lazer integration test reads actual local storage, resolves a map from a synthetic replay, renders a video, checks that the database and map content are unchanged, and verifies temporary-link cleanup. Both use separate test libraries under `web/data`.
+`STUDIO_TEST_FFMPEG` задаёт полный путь к FFmpeg, если он не находится в PATH. Стандартная проверка использует сгенерированные карту и реплеи; lazer-проверка читает реальное локальное хранилище. Тестовые библиотеки создаются отдельно в `web/data/`. Проверки движка выполняйте последовательно: runtime использует общие каталоги базы и настроек.
 
-The server accepts `PORT` and `STUDIO_DATA_DIR` for an isolated instance. Engine integration tests should run sequentially because the engine shares its runtime database/settings directories.
-
-## Repository layout
-
-| Path | Purpose |
+| Каталог или файл | Назначение |
 | --- | --- |
-| `web/src` | React/TypeScript interface |
-| `web/server` | Local Express service, SQLite storage, imports and rendering |
-| `web/shared` | Shared palette logic |
-| `web/test` | Unit and integration checks |
-| `danser-go` | Vendored upstream engine with Studio modifications |
-| `tools/LazerIndex` | Read-only Realm index helper |
-| `Build-*.ps1` | Engine and helper build scripts |
-| `Start-Studio.*` | Windows startup scripts |
+| `web/src/` | Интерфейс React/TypeScript |
+| `web/server/` | API, хранение, импорт и рендер |
+| `web/shared/` | Общая логика палитр и музыкального превью |
+| `web/test/` | Модульные и интеграционные проверки |
+| `danser-go/` | Движок с изменениями Studio |
+| `tools/LazerIndex/` | Индексатор Realm только для чтения |
+| `Build-*.ps1` | Скрипты сборки движка и индексатора |
+| `Start-Studio.*` | Скрипты запуска Windows |
 
-Local development notes and temporary screenshots are kept in `.local-work/`, which is excluded from the repository.
+Рабочие материалы разработки хранятся в `.local-work/` и не публикуются.
 
-## Development workflow
+В проекте используется GitFlow: ветки `feature/*` и `fix/*` создаются от `develop`, изменения интегрируются merge-коммитами. Релизы готовятся в `release/<version>` и вливаются в `main` и обратно в `develop`; выпущенный коммит отмечается тегом. Сообщения коммитов — Conventional Commits с коротким описанием на английском.
 
-`main` contains released versions; `develop` is the integration branch. Start feature and ordinary fix branches from an up-to-date `develop`, review changes against it, and integrate with merge commits. Prepare releases on `release/<version>`, merge them into `main` and back into `develop`, and tag the released commit. Completed branches can then be deleted without removing their commit history. Use Conventional Commits with concise English descriptions.
+## Ограничения
 
-The frontend redesign will build on this baseline. Runtime builds, local replays, imported archives, databases, credentials, and generated media must stay outside version control.
+- Поддерживается osu!standard и одна карта в одном видео. Монтажа нескольких карт, паузы рендера и автоматического скачивания карт нет.
+- Интерактивное прохождение и нативное оконное воспроизведение движка через веб-API недоступны.
+- Полный редактор следует схеме движка: некоторые названия остаются на английском, сложные массивы редактируются через JSON, отдельные значения вводятся вручную.
+- Основные параметры Studio уточняют соответствующие значения JSON перед запуском рендера. Фиксированные палитры сравнения отключают rainbow и beat flashes курсоров.
+- Воспроизведение готового видео в браузере зависит от кодека. Аппаратное кодирование NVENC зависит от видеокарты и сборки FFmpeg.
+- Совместимость всех сочетаний lazer-реплеев и модов не подтверждена. Совпадение MD5 само по себе не гарантирует идеальное воспроизведение любого реплея.
+- Linux-упаковка не проверена; macOS не поддерживается upstream-движком.
 
-## Current limitations
+## Движок и лицензии
 
-- Early working version; there is no full installer or automatic map download.
-- One map per scene; multiple-map video editing and render pause are not implemented.
-- The web interface provides video previews and screenshots. Interactive play and native window playback are not exposed through its API.
-- The settings editor exposes the current Go configuration schema. Some labels remain in English, complex arrays use JSON, dynamic choices need manual input, and visibility conditions are shown as hints.
-- Main render controls override the corresponding engine JSON values when a job starts. Fixed comparison palettes disable cursor rainbow and beat flashes.
-- Browser video playback depends on the selected codec; MP4/H.264/AAC is the usual interoperable choice.
-- Real lazer replay/mod combinations still need broader validation. Matching a map does not by itself guarantee perfect playback compatibility.
-- Linux packaging has not been tested; macOS is not supported by upstream danser-go.
+Studio добавляет `-studio-version`, протокол `-studio-manifest` для партий реплеев и стабильных цветов по SHA-256, а также переменную `DANSER_STUDIO_FFMPEG` для выбора FFmpeg. Vendored-движок основан на upstream-коммите `2fc4c8931ff4446a411b0094d7d7b4ede82c61c4`.
 
-## Engine changes and licensing
-
-Studio adds `-studio-version`, a `-studio-manifest` protocol for replay batches and stable colors keyed by replay SHA-256, and `DANSER_STUDIO_FFMPEG` for selecting FFmpeg. The original engine and its notices remain in `danser-go`.
-
-Project source is provided under **GPL-3.0**, following the original engine; see [LICENSE](LICENSE) and [upstream credits](danser-go/CREDITS.md). Bundled third-party assets and native libraries retain their respective licenses. Binary distribution must include the applicable source and license notices. See [Wieku/danser-go](https://github.com/Wieku/danser-go) for upstream development and documentation.
-
-Music preview starts at the selected .osu PreviewTime (milliseconds). Missing, negative, malformed or out-of-track values fall back to 40% of the map end time, capped by audio duration; if map timing is unavailable, audio duration is used. Seeking occurs after audio metadata loads, before autoplay. This affects listening only, not video export.
-
-Music seeking lives in a thin pink strip below the header, with elapsed/total time and a keyboard-accessible slider. Play/pause, mute and volume sit at the scene edge. On Full HD the larger record owns the scene height and map metadata sits at the upper left. Fine 4.5px grooves retain neutral reflections; the center uses untinted map artwork with a dark spindle surround and no rotating text or product branding. Pink remains the action and music accent; the cyan music treatment was removed at the user request. On narrow screens audio controls form a compact row above the record.
+Исходный код проекта распространяется под **GPL-3.0**: [LICENSE](LICENSE), [авторство и благодарности движка](danser-go/CREDITS.md). Сторонние ресурсы и нативные библиотеки сохраняют собственные лицензии; локальные шрифты описаны в [web/public/ASSETS.md](web/public/ASSETS.md). При распространении бинарных сборок необходимо включать соответствующие исходники и лицензионные уведомления.

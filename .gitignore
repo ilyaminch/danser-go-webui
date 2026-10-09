@@ -17,3 +17,7 @@ credentials.json
 .env
 .env.*
 !.env.example
+# Local design workflow context
+.impeccable/
+/DESIGN.md
+/PRODUCT.md
