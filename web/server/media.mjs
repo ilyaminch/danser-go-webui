@@ -6,7 +6,8 @@ import { safeResourceName, storageFile } from "./lazer.mjs";
 export function parseMedia(text) {
   let section = "",
     audio = "",
-    background = "";
+    background = "",
+    previewTime = -1;
   for (const raw of text.replace(/^\uFEFF/, "").split(/\r?\n/)) {
     const line = raw.trim();
     if (line.startsWith("[")) {
@@ -15,12 +16,17 @@ export function parseMedia(text) {
     }
     if (section === "[General]" && line.startsWith("AudioFilename:"))
       audio = line.slice("AudioFilename:".length).trim();
+    if (section === "[General]" && line.startsWith("PreviewTime:")) {
+      const value = line.slice("PreviewTime:".length).trim();
+      const parsed = /^\d+$/.test(value) ? Number(value) : -1;
+      previewTime = Number.isSafeInteger(parsed) ? parsed : -1;
+    }
     if (section === "[Events]" && !background) {
       const match = /^(?:0|Background)\s*,\s*\d+\s*,\s*"([^"]+)"/i.exec(line);
       if (match) background = match[1];
     }
   }
-  return { audio, background };
+  return { audio, background, previewTime };
 }
 
 export async function resolveMedia(store, map, kind) {

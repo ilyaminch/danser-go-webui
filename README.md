@@ -156,3 +156,5 @@ The frontend redesign will build on this baseline. Runtime builds, local replays
 Studio adds `-studio-version`, a `-studio-manifest` protocol for replay batches and stable colors keyed by replay SHA-256, and `DANSER_STUDIO_FFMPEG` for selecting FFmpeg. The original engine and its notices remain in `danser-go`.
 
 Project source is provided under **GPL-3.0**, following the original engine; see [LICENSE](LICENSE) and [upstream credits](danser-go/CREDITS.md). Bundled third-party assets and native libraries retain their respective licenses. Binary distribution must include the applicable source and license notices. See [Wieku/danser-go](https://github.com/Wieku/danser-go) for upstream development and documentation.
+
+Music preview starts at the selected .osu PreviewTime (milliseconds). Missing, negative, malformed or out-of-track values fall back to 40% of the map end time, capped by audio duration; if map timing is unavailable, audio duration is used. Seeking occurs after audio metadata loads, before autoplay. This affects listening only, not video export.

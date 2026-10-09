@@ -96,3 +96,5 @@ Danser Studio — локальное веб-приложение для созд
 5. Показывать реальные состояния и ограничения. Существенные изменения поведения и противоречия с подтверждёнными требованиями обсуждать с пользователем.
 
 Уточнение интерфейса: приоритет fullscreen 16:9 Full HD. Удалены поиск/фильтры попыток и кнопка импорта папки по запросу пользователя. Ник, дата, характеристики и ручной цвет сохраняются. Экспорт всегда виден в основном desktop workspace; очередь имеет отдельную область прокрутки.
+
+Music preview starts at the selected .osu PreviewTime (milliseconds). Missing, negative, malformed or out-of-track values fall back to 40% of the map end time, capped by audio duration; if map timing is unavailable, audio duration is used. Seeking occurs after audio metadata loads, before autoplay. This affects listening only, not video export.

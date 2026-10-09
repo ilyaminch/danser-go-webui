@@ -11,7 +11,7 @@ import { detectLazer, indexLazer, resolveMap } from "./lazer.mjs";
 import { loadSchema } from "./schema.mjs";
 import { createRenderer, validateProject, runCommand } from "./render.mjs";
 import { importMapArchive, importSkin, listSkins } from "./assets.mjs";
-import { resolveMedia } from "./media.mjs";
+import { parseMedia, resolveMedia } from "./media.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataDir = process.env.STUDIO_DATA_DIR || path.join(root, "data");
@@ -90,9 +90,13 @@ app.get(
       ),
     );
     const base = `/api/maps/${map.hash}/media/`;
+    const { previewTime } = await readFile(map.path, "utf8")
+      .then(parseMedia)
+      .catch(() => ({ previewTime: -1 }));
     res.json({
       background: background ? base + "background" : null,
       audio: audio ? base + "audio" : null,
+      previewTime,
     });
   }),
 );

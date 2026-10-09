@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { Disc3, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import type { MapInfo } from "./render-types";
 import { t } from "./i18n";
+import { previewStart } from "../shared/music.mjs";
 
 export function VinylStage({ map }: { map?: MapInfo }) {
   const audio = useRef<HTMLAudioElement>(null);
   const [media, setMedia] = useState<{
     background: string | null;
     audio: string | null;
-  }>({ background: null, audio: null });
+    previewTime: number;
+  }>({ background: null, audio: null, previewTime: -1 });
   const [playing, setPlaying] = useState(false),
     [elapsed, setElapsed] = useState(0),
     [duration, setDuration] = useState(0);
@@ -24,7 +26,7 @@ export function VinylStage({ map }: { map?: MapInfo }) {
   const [error, setError] = useState("");
   useEffect(() => {
     const controller = new AbortController();
-    setMedia({ background: null, audio: null });
+    setMedia({ background: null, audio: null, previewTime: -1 });
     setPlaying(false);
     setElapsed(0);
     setDuration(0);
@@ -54,19 +56,31 @@ export function VinylStage({ map }: { map?: MapInfo }) {
     const player = audio.current;
     if (!media.audio || !player) return;
     let active = true;
-    player.play().catch((reason) => {
-      if (!active || reason.name === "AbortError") return;
-      setError(
-        reason.name === "NotAllowedError"
-          ? t("Браузер заблокировал автозапуск. Нажмите «Слушать карту».")
-          : t("Браузер не может воспроизвести этот аудиофайл"),
+    const start = () => {
+      if (!active) return;
+      player.currentTime = previewStart(
+        media.previewTime,
+        player.duration,
+        map?.lastObjectTime,
       );
-    });
+      setElapsed(player.currentTime);
+      player.play().catch((reason) => {
+        if (!active || reason.name === "AbortError") return;
+        setError(
+          reason.name === "NotAllowedError"
+            ? t("Браузер заблокировал автозапуск. Нажмите «Слушать карту».")
+            : t("Браузер не может воспроизвести этот аудиофайл"),
+        );
+      });
+    };
+    if (player.readyState >= 1) start();
+    else player.addEventListener("loadedmetadata", start, { once: true });
     return () => {
       active = false;
+      player.removeEventListener("loadedmetadata", start);
       player.pause();
     };
-  }, [media.audio]);
+  }, [media.audio, media.previewTime]);
   const time = (n: number) =>
     `${Math.floor(n / 60)}:${String(Math.floor(n % 60)).padStart(2, "0")}`;
   return (
@@ -130,7 +144,7 @@ export function VinylStage({ map }: { map?: MapInfo }) {
         <button
           className="play-track"
           aria-label={playing ? t("Приостановить музыку") : t("Слушать карту")}
-          disabled={!media.audio}
+          disabled={!media.audio || !duration}
           onClick={async () => {
             if (!audio.current) return;
             setError("");

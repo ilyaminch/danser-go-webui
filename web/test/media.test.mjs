@@ -12,11 +12,12 @@ test("media uses actual osu event names, not background.jpg", () => {
     parseMedia(
       '\ufeffosu file format v14\n[General]\nAudioFilename: music song.ogg\n[Events]\n//Background\n0,0,"art, final.png",0,0\n',
     ),
-    { audio: "music song.ogg", background: "art, final.png" },
+    { audio: "music song.ogg", background: "art, final.png", previewTime: -1 },
   );
   assert.deepEqual(parseMedia('[Events]\nVideo,0,"movie.mp4"'), {
     audio: "",
     background: "",
+    previewTime: -1,
   });
 });
 test("media resolves local and lazer resources read-only and rejects traversal", async () => {
@@ -72,4 +73,20 @@ test("media resolves local and lazer resources read-only and rejects traversal",
     );
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("media reads valid preview timestamps and tolerates missing or invalid values", () => {
+  for (const [value, expected] of [
+    ["65400", 65400],
+    ["0", 0],
+    ["-1", -1],
+    ["", -1],
+    ["wrong", -1],
+    ["1.5", -1],
+    ["99999999999999999999", -1],
+  ])
+    assert.equal(
+      parseMedia(`[General]\nPreviewTime: ${value}`).previewTime,
+      expected,
+    );
 });
