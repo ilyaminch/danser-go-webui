@@ -36,93 +36,104 @@ export function DateGradientPanel({
 }) {
   return (
     <section className="workflow-card">
-      <div className="palette-preview" style={{ background: paletteCss }} />
-      <div className="gradient-labels">
-        <span>{t("Старые попытки")}</span>
-        <span>{t("Новые попытки")}</span>
-      </div>
-      <div className="color-stops">
-        {project.palette.stops.map((c, i) => (
-          <div key={i}>
-            <input
-              aria-label={t("Цвет градиента {n}", { n: i + 1 })}
-              type="color"
-              value={c}
-              onChange={(e) =>
-                updatePalette(
-                  "stops",
-                  project.palette.stops.map((s, j) =>
-                    i === j ? e.target.value : s,
-                  ),
-                )
-              }
-            />
-            <code>{c}</code>
-            {project.palette.stops.length > 2 && (
-              <button
-                className="icon-btn"
-                title={t("Убрать точку")}
-                onClick={() =>
+      {project.palette.enabled === false && (
+        <p className="note">
+          {t("Включите градиент, чтобы изменить автоматические цвета.")}
+        </p>
+      )}
+      <fieldset disabled={project.palette.enabled === false}>
+        <div className="palette-preview" style={{ background: paletteCss }} />
+        <div className="gradient-labels">
+          <span>{t("Старые попытки")}</span>
+          <span>{t("Новые попытки")}</span>
+        </div>
+        <div className="color-stops">
+          {project.palette.stops.map((c, i) => (
+            <div key={i}>
+              <input
+                aria-label={t("Цвет градиента {n}", { n: i + 1 })}
+                type="color"
+                value={c}
+                onChange={(e) =>
                   updatePalette(
                     "stops",
-                    project.palette.stops.filter((_, j) => j !== i),
+                    project.palette.stops.map((s, j) =>
+                      i === j ? e.target.value : s,
+                    ),
                   )
                 }
-              >
-                <X size={12} />
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
-      <div className="palette-actions">
-        <button
-          className="text-button"
-          onClick={() =>
-            updatePalette("stops", [
-              ...project.palette.stops.slice(0, -1),
-              "#b9a7fa",
-              project.palette.stops.at(-1)!,
-            ])
-          }
-        >
-          <Plus size={13} />
-          {t("Точка")}
-        </button>
-        <button
-          className="text-button"
-          onClick={() => updatePalette("reverse", !project.palette.reverse)}
-        >
-          <ArrowLeftRight size={13} />
-          {t("Развернуть")}
-        </button>
-      </div>
-      <div className="preset-swatches">
-        {[
-          ["#ff66aa", "#9565f5", "#35ced3"],
-          ["#5798ff", "#9565f5", "#ff66aa"],
-          ["#42bacc", "#a4e878"],
-          ["#ed8556", "#b59cf9"],
-        ].map((stops, i) => (
+              />
+              <code>{c}</code>
+              {project.palette.stops.length > 2 && (
+                <button
+                  className="icon-btn"
+                  title={t("Убрать точку")}
+                  onClick={() =>
+                    updatePalette(
+                      "stops",
+                      project.palette.stops.filter((_, j) => j !== i),
+                    )
+                  }
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="palette-actions">
           <button
-            key={i}
-            aria-label={t("Пресет градиента {n}", { n: i + 1 })}
-            style={{
-              background: `linear-gradient(90deg,${stops.join(",")})`,
-            }}
-            onClick={() => updatePalette("stops", stops)}
-          />
-        ))}
-      </div>
-      <FieldLabel label={t("Распределение")}>
-        <select
-          value={project.palette.spacing}
-          onChange={(e) => updatePalette("spacing", e.target.value)}
-        >
-          <option value="rank">{t("Равномерно между датами")}</option>
-          <option value="time">{t("По реальным интервалам времени")}</option>
-        </select>
-      </FieldLabel>
+            className="text-button"
+            onClick={() =>
+              updatePalette("stops", [
+                ...project.palette.stops.slice(0, -1),
+                "#b9a7fa",
+                project.palette.stops.at(-1)!,
+              ])
+            }
+          >
+            <Plus size={13} />
+            {t("Точка")}
+          </button>
+          <button
+            className="text-button"
+            onClick={() => updatePalette("reverse", !project.palette.reverse)}
+            aria-pressed={project.palette.reverse}
+          >
+            <ArrowLeftRight size={13} />
+            {t("Развернуть")}
+          </button>
+        </div>
+        <div className="preset-swatches">
+          {[
+            ["#ff66aa", "#9565f5", "#35ced3"],
+            ["#5798ff", "#9565f5", "#ff66aa"],
+            ["#42bacc", "#a4e878"],
+            ["#ed8556", "#b59cf9"],
+          ].map((stops, i) => (
+            <button
+              key={i}
+              aria-label={t("Пресет градиента {n}", { n: i + 1 })}
+              aria-pressed={
+                JSON.stringify(project.palette.stops) === JSON.stringify(stops)
+              }
+              style={{
+                background: `linear-gradient(90deg,${stops.join(",")})`,
+              }}
+              onClick={() => updatePalette("stops", stops)}
+            />
+          ))}
+        </div>
+        <FieldLabel label={t("Распределение")}>
+          <select
+            value={project.palette.spacing}
+            onChange={(e) => updatePalette("spacing", e.target.value)}
+          >
+            <option value="rank">{t("Равномерно между датами")}</option>
+            <option value="time">{t("По реальным интервалам времени")}</option>
+          </select>
+        </FieldLabel>
+      </fieldset>
       <p className="note">
         {t("Ручной цвет попытки имеет приоритет над градиентом.")}
       </p>

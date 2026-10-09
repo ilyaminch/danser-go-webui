@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { writeFixtures, makeReplay } from "./fixtures.mjs";
 import { zip } from "./archive-fixture.mjs";
 import { runCommand } from "../server/render.mjs";
+import { assignColors, setGradientEnabled } from "../shared/palette.mjs";
 
 const root = path.resolve(".."),
   testDir = path.resolve("data/integration", String(Date.now())),
@@ -235,10 +236,20 @@ try {
     project: {
       ...project,
       kind: "comparison",
-      replayIds: [project.replayIds[0]],
+      replayIds: [
+        imported.imported.toSorted(
+          (a, b) => Date.parse(b.date) - Date.parse(a.date),
+        )[0].id,
+      ],
     },
     action: "preview",
   });
+  const batchColors = assignColors(imported.imported, project.palette);
+  assert.deepEqual(
+    single.project.palette.overrides,
+    batchColors,
+    "Queued colors differ from the whole loaded batch",
+  );
   const singleJob = await waitUntil(async () => {
     const item = (await request("/state")).jobs.find((j) => j.id === single.id);
     return item && !["queued", "running"].includes(item.status) ? item : false;
@@ -251,6 +262,29 @@ try {
   assert.ok(singleJob.args.includes("-studio-manifest"));
   assert.ok(!singleJob.args.includes("-replay"));
   assert.equal((await request("/state")).replays.length, 2);
+  const frozen = setGradientEnabled(imported.imported, project.palette, false);
+  const offJob = await request("/jobs", "POST", {
+    project: {
+      ...project,
+      replayIds: single.project.replayIds,
+      palette: { ...frozen, stops: ["#112233", "#445566"], reverse: true },
+    },
+    action: "screenshot",
+  });
+  assert.deepEqual(
+    offJob.project.palette.overrides,
+    batchColors,
+    "Disabled gradient changed frozen render colors",
+  );
+  const offResult = await waitUntil(async () => {
+    const job = (await request("/state")).jobs.find((j) => j.id === offJob.id);
+    return job && !["queued", "running"].includes(job.status) ? job : false;
+  });
+  assert.equal(
+    offResult.status,
+    "completed",
+    offResult.error || offResult.log.slice(-2000),
+  );
   await assert.rejects(
     request("/jobs", "POST", { project, action: "watch" }),
     /действие/,

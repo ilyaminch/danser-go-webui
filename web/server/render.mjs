@@ -1,4 +1,7 @@
-import { createReplayLifecycle } from "./replay-workspace.mjs";
+import {
+  createReplayLifecycle,
+  workspaceReplays,
+} from "./replay-workspace.mjs";
 import { spawn } from "node:child_process";
 import {
   access,
@@ -11,7 +14,7 @@ import {
 } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { assignColors } from "../shared/palette.mjs";
+import { assignColors, capturePalette } from "../shared/palette.mjs";
 import { resolveMap, prepareMapView } from "./lazer.mjs";
 import { selectedSkin } from "./assets.mjs";
 
@@ -287,6 +290,19 @@ export function createRenderer(store, dataDir) {
     return withReplayLock(() => {
       // Another completed job may have released these copies during the probes.
       validateProject(project, store);
+      if (project.kind === "comparison") {
+        const batch = new Map(
+          workspaceReplays(store)
+            .filter((r) => r.mapHash === project.mapHash)
+            .map((r) => [r.id, r]),
+        );
+        for (const id of project.replayIds)
+          batch.set(id, store.get("replay", id));
+        project = {
+          ...project,
+          palette: capturePalette([...batch.values()], project.palette),
+        };
+      }
       const job = {
         id: randomUUID(),
         name: project.name,

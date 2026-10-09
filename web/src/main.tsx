@@ -14,13 +14,14 @@ import {
   Play,
   Plus,
   RefreshCw,
+  RotateCcw,
   Search,
   Settings2,
   SlidersHorizontal,
   Upload,
   X,
 } from "lucide-react";
-import { assignColors } from "../shared/palette.mjs";
+import { assignColors, setGradientEnabled } from "../shared/palette.mjs";
 import {
   restoreRenderSettings,
   readSession,
@@ -88,6 +89,8 @@ const freshProject = (): Project => ({
   replayIds: [],
   palette: {
     mode: "date",
+    enabled: true,
+    frozen: {},
     spacing: "rank",
     stops: ["#ff66aa", "#9565f5", "#35ced3"],
     reverse: false,
@@ -170,6 +173,9 @@ const fmtDate = (date: string | null) =>
         day: "2-digit",
         month: "short",
         year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
       }).format(new Date(date))
     : t("Дата неизвестна");
 const num = (n: number) =>
@@ -327,7 +333,11 @@ function App() {
   const selected = state.replays.filter((r) =>
     project.replayIds.includes(r.id),
   );
-  const colors = assignColors(selected, project.palette);
+  const colors = assignColors(state.replays, project.palette);
+  const gradientEnabled = project.palette.enabled !== false;
+  const manualColorCount = state.replays.filter(
+    (r) => project.palette.overrides[r.id],
+  ).length;
   const map = state.maps.find((m) => m.hash === project.mapHash);
   const visible = [...state.replays].sort(
     (a, b) =>
@@ -687,7 +697,10 @@ function App() {
         </div>
       )}
       <main className="studio-layout">
-        <div className="source-rail" key={`source-${page}`}>
+        <div
+          className={`source-rail ${page === "library" && usesReplays ? "replay-source" : ""}`}
+          key={`source-${page}`}
+        >
           {page === "library" && (
             <>
               <h2>{t("Источник")}</h2>
@@ -710,7 +723,7 @@ function App() {
               {usesReplays ? (
                 <>
                   <div
-                    className={`replay-drop ${dragging ? "dragging" : ""}`}
+                    className={`replay-drop ${state.replays.length ? "loaded" : ""} ${dragging ? "dragging" : ""}`}
                     onDragOver={(e) => {
                       e.preventDefault();
                       setDragging(true);
@@ -722,16 +735,22 @@ function App() {
                       void importReplays(e.dataTransfer.files);
                     }}
                   >
-                    <Upload size={23} />
-                    <h3>{t("Добавьте попытки")}</h3>
-                    <p>{t("Перетащите .osr одной карты")}</p>
+                    {!state.replays.length && (
+                      <>
+                        <Upload size={23} />
+                        <h3>{t("Добавьте попытки")}</h3>
+                        <p>{t("Перетащите .osr одной карты")}</p>
+                      </>
+                    )}
                     <button
-                      className="button primary"
+                      className={`button ${state.replays.length ? "ghost" : "primary"}`}
                       disabled={!!busy}
                       onClick={() => fileRef.current?.click()}
                     >
                       <Plus size={16} />
-                      {t("Выбрать реплеи")}
+                      {state.replays.length
+                        ? t("Добавить реплеи")
+                        : t("Выбрать реплеи")}
                     </button>
                   </div>
                   <input
@@ -762,14 +781,81 @@ function App() {
                       {t("Снять")}
                     </button>
                   </div>
-                  <details className="date-gradient">
-                    <summary>{t("Общий градиент по датам")}</summary>
+                  <div className="gradient-control">
+                    <div className="gradient-control-row">
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={gradientEnabled}
+                        aria-label={t("Градиент по датам")}
+                        className="gradient-switch"
+                        onClick={() =>
+                          setProject((p) => ({
+                            ...p,
+                            palette: setGradientEnabled(
+                              state.replays,
+                              p.palette,
+                              !gradientEnabled,
+                            ),
+                          }))
+                        }
+                      >
+                        <span className="switch-track" aria-hidden="true" />
+                        <span>{t("Градиент по датам")}</span>
+                      </button>
+                      <span className="gradient-status">
+                        {gradientEnabled ? t("Включён") : t("Выключен")}
+                      </span>
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        popoverTarget="date-gradient-editor"
+                        aria-label={t("Настроить градиент")}
+                        title={t("Настроить градиент")}
+                      >
+                        <Settings2 size={17} />
+                      </button>
+                    </div>
+                    <div className="gradient-caption">
+                      <span>
+                        {gradientEnabled
+                          ? t("По всей пачке · цвета не меняются при выборе")
+                          : t("Текущие цвета зафиксированы")}
+                      </span>
+                      {manualColorCount > 0 && (
+                        <span>
+                          {t("Ручных цветов: {count}", {
+                            count: manualColorCount,
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div
+                    id="date-gradient-editor"
+                    className="gradient-editor"
+                    popover="auto"
+                    aria-label={t("Настройки градиента")}
+                  >
+                    <header>
+                      <h3>{t("Настройки градиента")}</h3>
+                      <button
+                        type="button"
+                        className="icon-btn"
+                        popoverTarget="date-gradient-editor"
+                        popoverTargetAction="hide"
+                        aria-label={t("Закрыть настройки градиента")}
+                      >
+                        <X size={18} />
+                      </button>
+                    </header>
                     <DateGradientPanel
                       project={project}
                       updatePalette={updatePalette}
                       paletteCss={paletteCss}
                     />
-                  </details>
+                  </div>
+                  <div className="attempt-order">{t("Сначала новые")}</div>
                   <div className="attempt-list">
                     {visible.map((r) => (
                       <div
@@ -783,30 +869,58 @@ function App() {
                             onChange={(e) => chooseReplay(r, e.target.checked)}
                           />
                           <span>
-                            <b>{r.player}</b>
+                            <span className="attempt-title">
+                              <b>{r.player}</b>
+                              <span className="attempt-result">
+                                {r.accuracy.toFixed(2)}% · {num(r.combo)}x
+                              </span>
+                            </span>
                             <small>
                               {fmtDate(r.date)} ·{" "}
                               {r.modList.join(" ") || "No Mod"}
                             </small>
                           </span>
                         </label>
-                        <input
-                          className="swatch"
-                          aria-label={`${t("Цвет")} ${r.player}`}
-                          type="color"
-                          disabled={!colors[r.id]}
-                          value={colors[r.id] || "#9198a8"}
-                          onChange={(e) =>
-                            updatePalette("overrides", {
-                              ...project.palette.overrides,
-                              [r.id]: e.target.value,
-                            })
-                          }
-                        />
+                        <div className="attempt-color">
+                          <input
+                            className="swatch"
+                            aria-label={`${t("Цвет")} ${r.player} · ${fmtDate(r.date)}`}
+                            type="color"
+                            disabled={!colors[r.id]}
+                            value={colors[r.id] || "#9198a8"}
+                            onChange={(e) =>
+                              updatePalette("overrides", {
+                                ...project.palette.overrides,
+                                [r.id]: e.target.value,
+                              })
+                            }
+                          />
+                          {project.palette.overrides[r.id] && (
+                            <button
+                              className="color-reset"
+                              type="button"
+                              aria-label={`${t("Снять ручной цвет")} · ${r.player} · ${fmtDate(r.date)}`}
+                              title={t("Снять ручной цвет")}
+                              onClick={() => {
+                                const overrides = {
+                                  ...project.palette.overrides,
+                                };
+                                delete overrides[r.id];
+                                updatePalette("overrides", overrides);
+                              }}
+                            >
+                              <RotateCcw size={13} />
+                            </button>
+                          )}
+                          <small>
+                            {project.palette.overrides[r.id]
+                              ? t("Ручной")
+                              : gradientEnabled
+                                ? t("Авто")
+                                : t("Фикс.")}
+                          </small>
+                        </div>
                         <div className="attempt-stats">
-                          <span>
-                            {r.accuracy.toFixed(2)}% · {num(r.combo)}x
-                          </span>
                           <div className="hit-counts">
                             <span>
                               300: <b>{num(r.count300 ?? 0)}</b>
@@ -821,20 +935,6 @@ function App() {
                               {t("Промахи")}: <b>{num(r.misses)}</b>
                             </span>
                           </div>
-                          {project.palette.overrides[r.id] && (
-                            <button
-                              className="text-button"
-                              onClick={() => {
-                                const overrides = {
-                                  ...project.palette.overrides,
-                                };
-                                delete overrides[r.id];
-                                updatePalette("overrides", overrides);
-                              }}
-                            >
-                              {t("Снять ручной цвет")}
-                            </button>
-                          )}
                         </div>
                       </div>
                     ))}
@@ -870,7 +970,9 @@ function App() {
                   </select>
                 </FieldLabel>
               )}
-              <section className="workflow-card map-summary">
+              <section
+                className={`workflow-card map-summary ${usesReplays && map ? "resolved" : ""}`}
+              >
                 <h2>
                   {usesReplays ? t("Карта из реплея") : t("Карта для видео")}
                 </h2>

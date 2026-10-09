@@ -38,6 +38,8 @@ Under **Create**, import replays or choose **Map** and a visualization mode. Set
 
 **New render** clears the current attempts while preserving session settings. You can upload another map while earlier jobs finish with their own replay copies and settings. Temporary copies are removed after a successful video; previews, failed jobs, and cancelled jobs retain their copies for retry.
 
+The date gradient uses the entire loaded batch, so selecting attempts does not change their colors. Turning it off freezes the current colors; manual overrides remain in effect. Gradient editing opens beside the attempt list. Each attempt shows its timestamp and hit counts.
+
 Replay videos retain recorded mods. CS/AR/OD/HP overrides apply only to map visualization. Default recording uses NVENC; select libx264 if hardware encoding is unavailable.
 
 ## Development

@@ -36,6 +36,7 @@ export function restoreRenderSettings(defaults, serialized, recordingMigrated) {
         ...defaults.palette,
         ...(object(saved.palette) ? saved.palette : {}),
         mode: "date",
+        enabled: saved.palette?.enabled !== false,
       },
       rules: { ...defaults.rules, ...(object(saved.rules) ? saved.rules : {}) },
       export: {
@@ -61,9 +62,9 @@ export function restoreRenderSettings(defaults, serialized, recordingMigrated) {
       )
     )
       restored.palette.stops = defaults.palette.stops;
-    for (const key of ["players", "overrides"])
+    for (const key of ["players", "overrides", "frozen"])
       if (!object(restored.palette[key]))
-        restored.palette[key] = defaults.palette[key];
+        restored.palette[key] = defaults.palette[key] ?? {};
     if (!recordingMigrated) {
       restored.export = defaults.export;
       restored.configPatch = {
