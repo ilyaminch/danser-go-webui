@@ -1,14 +1,23 @@
 import { useEffect, useRef, useState } from "react";
-import { Disc3, Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { createPortal } from "react-dom";
 import type { MapInfo } from "./render-types";
 import { t } from "./i18n";
+import { previewStart } from "../shared/music.mjs";
 
-export function VinylStage({ map }: { map?: MapInfo }) {
+export function VinylStage({
+  map,
+  timelineHost,
+}: {
+  map?: MapInfo;
+  timelineHost: HTMLDivElement | null;
+}) {
   const audio = useRef<HTMLAudioElement>(null);
   const [media, setMedia] = useState<{
     background: string | null;
     audio: string | null;
-  }>({ background: null, audio: null });
+    previewTime: number;
+  }>({ background: null, audio: null, previewTime: -1 });
   const [playing, setPlaying] = useState(false),
     [elapsed, setElapsed] = useState(0),
     [duration, setDuration] = useState(0);
@@ -24,7 +33,7 @@ export function VinylStage({ map }: { map?: MapInfo }) {
   const [error, setError] = useState("");
   useEffect(() => {
     const controller = new AbortController();
-    setMedia({ background: null, audio: null });
+    setMedia({ background: null, audio: null, previewTime: -1 });
     setPlaying(false);
     setElapsed(0);
     setDuration(0);
@@ -54,19 +63,31 @@ export function VinylStage({ map }: { map?: MapInfo }) {
     const player = audio.current;
     if (!media.audio || !player) return;
     let active = true;
-    player.play().catch((reason) => {
-      if (!active || reason.name === "AbortError") return;
-      setError(
-        reason.name === "NotAllowedError"
-          ? t("Браузер заблокировал автозапуск. Нажмите «Слушать карту».")
-          : t("Браузер не может воспроизвести этот аудиофайл"),
+    const start = () => {
+      if (!active) return;
+      player.currentTime = previewStart(
+        media.previewTime,
+        player.duration,
+        map?.lastObjectTime,
       );
-    });
+      setElapsed(player.currentTime);
+      player.play().catch((reason) => {
+        if (!active || reason.name === "AbortError") return;
+        setError(
+          reason.name === "NotAllowedError"
+            ? t("Браузер заблокировал автозапуск. Нажмите «Слушать карту».")
+            : t("Браузер не может воспроизвести этот аудиофайл"),
+        );
+      });
+    };
+    if (player.readyState >= 1) start();
+    else player.addEventListener("loadedmetadata", start, { once: true });
     return () => {
       active = false;
+      player.removeEventListener("loadedmetadata", start);
       player.pause();
     };
-  }, [media.audio]);
+  }, [media.audio, media.previewTime]);
   const time = (n: number) =>
     `${Math.floor(n / 60)}:${String(Math.floor(n % 60)).padStart(2, "0")}`;
   return (
@@ -75,8 +96,6 @@ export function VinylStage({ map }: { map?: MapInfo }) {
       aria-label={t("Музыка карты")}
     >
       <div className="stage-heading">
-        <Disc3 size={20} />
-        <span>{t("На сцене")}</span>
         <button
           className="text-button"
           aria-pressed={motion}
@@ -102,9 +121,8 @@ export function VinylStage({ map }: { map?: MapInfo }) {
           )}
           <div className="vinyl-grooves" />
           <div className="vinyl-label">
-            <span>danser</span>
-            <b>STUDIO</b>
-            <small>osu!standard</small>
+            {media.background && <img src={media.background} alt="" />}
+            <i className="label-ring" />
           </div>
           <div className="spindle" />
         </div>
@@ -126,11 +144,11 @@ export function VinylStage({ map }: { map?: MapInfo }) {
           </small>
         )}
       </div>
-      <div className="music-player">
+      <div className="music-controls">
         <button
           className="play-track"
           aria-label={playing ? t("Приостановить музыку") : t("Слушать карту")}
-          disabled={!media.audio}
+          disabled={!media.audio || !duration}
           onClick={async () => {
             if (!audio.current) return;
             setError("");
@@ -145,30 +163,6 @@ export function VinylStage({ map }: { map?: MapInfo }) {
         >
           {playing ? <Pause size={21} /> : <Play size={21} />}
         </button>
-        <div className="track-progress">
-          <div>
-            <span>
-              {media.audio ? t("Музыка карты") : t("Музыка не загружена")}
-            </span>
-            <span>
-              {time(elapsed)} / {time(duration)}
-            </span>
-          </div>
-          <input
-            aria-label={t("Позиция музыки")}
-            type="range"
-            min={0}
-            max={duration || 1}
-            step=".1"
-            value={elapsed}
-            disabled={!duration}
-            onChange={(e) => {
-              if (audio.current)
-                audio.current.currentTime = Number(e.target.value);
-              setElapsed(Number(e.target.value));
-            }}
-          />
-        </div>
         <button
           className="icon-btn"
           aria-label={muted ? t("Включить звук") : t("Выключить звук")}
@@ -178,9 +172,7 @@ export function VinylStage({ map }: { map?: MapInfo }) {
           {muted ? <VolumeX size={19} /> : <Volume2 size={19} />}
         </button>
         <label className="volume-control">
-          <span>
-            {t("Громкость")} {muted ? "0" : Math.round(volume * 100)}%
-          </span>
+          <span>{muted ? "0" : Math.round(volume * 100)}%</span>
           <input
             aria-label={t("Громкость музыки")}
             type="range"
@@ -197,6 +189,38 @@ export function VinylStage({ map }: { map?: MapInfo }) {
           {error}
         </p>
       )}
+      {timelineHost &&
+        createPortal(
+          <div
+            className="header-track"
+            style={
+              {
+                "--track-fill":
+                  (duration ? (elapsed / duration) * 100 : 0) + "%",
+              } as React.CSSProperties
+            }
+          >
+            <input
+              aria-label={t("Позиция музыки")}
+              aria-valuetext={time(elapsed) + " / " + time(duration)}
+              type="range"
+              min={0}
+              max={duration || 1}
+              step=".1"
+              value={elapsed}
+              disabled={!duration}
+              onChange={(e) => {
+                if (audio.current)
+                  audio.current.currentTime = Number(e.target.value);
+                setElapsed(Number(e.target.value));
+              }}
+            />
+            <span className="track-clock">
+              {time(elapsed)} / {time(duration)}
+            </span>
+          </div>,
+          timelineHost,
+        )}
       <audio
         ref={audio}
         src={media.audio ?? undefined}

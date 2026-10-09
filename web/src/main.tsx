@@ -9,7 +9,6 @@ import {
   Clapperboard,
   Clock3,
   Film,
-  FolderOpen,
   Layers3,
   LoaderCircle,
   Play,
@@ -171,6 +170,7 @@ const fmtDate = (date: string | null) =>
 const num = (n: number) =>
   new Intl.NumberFormat(getLanguage() === "ru" ? "ru-RU" : "en-GB").format(n);
 function App() {
+  const [timelineHost, setTimelineHost] = useState<HTMLDivElement | null>(null);
   const [language, changeLanguage] = useState<Language>(getLanguage);
   const [sceneTab, setSceneTab] = useState("rules");
   const [showExport, setShowExport] = useState(false);
@@ -218,12 +218,6 @@ function App() {
         return freshProject();
       }
     }),
-    [search, setSearch] = useState(""),
-    [mapFilter, setMapFilter] = useState(""),
-    [playerFilter, setPlayerFilter] = useState(""),
-    [dateFrom, setDateFrom] = useState(""),
-    [dateTo, setDateTo] = useState(""),
-    [sort, setSort] = useState("new"),
     [busy, setBusy] = useState(""),
     [notice, setNotice] = useState<{ text: string; error: boolean } | null>(
       null,
@@ -236,10 +230,7 @@ function App() {
     [health, setHealth] = useState<any>(null),
     [dragging, setDragging] = useState(false),
     [selectedJob, setSelectedJob] = useState<Job | null>(null),
-    [folder, setFolder] = useState(""),
-    [showFolder, setShowFolder] = useState(false),
     [cfg, setCfg] = useState<Config>(emptyState.config),
-    [groupFilter, setGroupFilter] = useState(""),
     [skins, setSkins] = useState<{ id: string; label: string }[]>([]);
   useEffect(() => {
     const { id, replayIds, mapHash, ...settings } = project;
@@ -357,29 +348,11 @@ function App() {
   );
   const colors = assignColors(selected, project.palette);
   const map = state.maps.find((m) => m.hash === project.mapHash);
-  const players = [...new Set(state.replays.map((r) => r.player))].sort();
-  const groups = [
-    ...new Set(state.replays.map((r) => r.group).filter(Boolean)),
-  ].sort();
-  const visible = state.replays
-    .filter(
-      (r) =>
-        (!mapFilter || r.mapHash === mapFilter) &&
-        (!playerFilter || r.player === playerFilter) &&
-        (!groupFilter || r.group === groupFilter) &&
-        (!dateFrom || (r.date && r.date.slice(0, 10) >= dateFrom)) &&
-        (!dateTo || (r.date && r.date.slice(0, 10) <= dateTo)) &&
-        `${r.player} ${r.filename} ${state.maps.find((m) => m.hash === r.mapHash)?.title || ""}`
-          .toLowerCase()
-          .includes(search.toLowerCase()),
-    )
-    .sort((a, b) =>
-      sort === "score"
-        ? b.score - a.score
-        : (sort === "old" ? 1 : -1) *
-            ((a.date ? Date.parse(a.date) : 0) -
-              (b.date ? Date.parse(b.date) : 0)) || a.id.localeCompare(b.id),
-    );
+  const visible = [...state.replays].sort(
+    (a, b) =>
+      (b.date ? Date.parse(b.date) : 0) - (a.date ? Date.parse(a.date) : 0) ||
+      a.id.localeCompare(b.id),
+  );
   const chooseReplay = (r: Replay, checked: boolean) => {
     if (
       checked &&
@@ -646,7 +619,7 @@ function App() {
     health?.engine && !!map && (project.kind !== "comparison" || health.studio);
   const paletteCss = `linear-gradient(90deg,${(project.palette.reverse ? [...project.palette.stops].reverse() : project.palette.stops).join(",")})`;
   return (
-    <div className="studio-app">
+    <div className={`studio-app workspace-${page}`}>
       <header className="studio-header">
         <a
           className="studio-brand"
@@ -710,6 +683,7 @@ function App() {
           </label>
         </div>
       </header>
+      <div className="music-timeline-host" ref={setTimelineHost} />
       {notice && (
         <div
           role={notice.error ? "alert" : "status"}
@@ -790,40 +764,6 @@ function App() {
                       e.target.value = "";
                     }}
                   />
-                  <button
-                    className="text-button"
-                    onClick={() => setShowFolder(!showFolder)}
-                  >
-                    <FolderOpen size={15} />
-                    {t("Импорт папки")}
-                  </button>
-                  {showFolder && (
-                    <div className="folder-import">
-                      <label>
-                        {t("Папка реплеев")}
-                        <input
-                          value={folder}
-                          placeholder="D:\osu!\Replays"
-                          onChange={(e) => setFolder(e.target.value)}
-                        />
-                      </label>
-                      <button
-                        className="button ghost"
-                        disabled={!!busy || !folder}
-                        onClick={() =>
-                          perform(t("Импортируем папку…"), async () =>
-                            importResult(
-                              await api("/import-folder", "POST", {
-                                path: folder,
-                              }),
-                            ),
-                          )
-                        }
-                      >
-                        {t("Импортировать")}
-                      </button>
-                    </div>
-                  )}
                   <div className="attempt-heading">
                     <h3>
                       {t("Попытки")}{" "}
@@ -841,73 +781,6 @@ function App() {
                       {t("Снять")}
                     </button>
                   </div>
-                  <details className="filter-disclosure">
-                    <summary>{t("Поиск и фильтры")}</summary>
-                    <input
-                      aria-label={t("Поиск реплеев")}
-                      placeholder={t("Игрок или файл")}
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                    />
-                    <select
-                      aria-label={t("Фильтр игроков")}
-                      value={playerFilter}
-                      onChange={(e) => setPlayerFilter(e.target.value)}
-                    >
-                      <option value="">{t("Все игроки")}</option>
-                      {players.map((p) => (
-                        <option key={p}>{p}</option>
-                      ))}
-                    </select>
-                    <select
-                      aria-label={t("Сортировка")}
-                      value={sort}
-                      onChange={(e) => setSort(e.target.value)}
-                    >
-                      <option value="new">{t("Сначала новые")}</option>
-                      <option value="old">{t("Сначала старые")}</option>
-                      <option value="score">{t("По счёту")}</option>
-                    </select>
-                    <FieldLabel label={t("Дата начала")}>
-                      <input
-                        type="date"
-                        value={dateFrom}
-                        onChange={(e) => setDateFrom(e.target.value)}
-                      />
-                    </FieldLabel>
-                    <FieldLabel label={t("Дата конца")}>
-                      <input
-                        type="date"
-                        value={dateTo}
-                        onChange={(e) => setDateTo(e.target.value)}
-                      />
-                    </FieldLabel>
-                    {groups.length > 0 && (
-                      <select
-                        aria-label={t("Группа")}
-                        value={groupFilter}
-                        onChange={(e) => setGroupFilter(e.target.value)}
-                      >
-                        <option value="">{t("Все группы")}</option>
-                        {groups.map((g) => (
-                          <option key={g}>{g}</option>
-                        ))}
-                      </select>
-                    )}
-                    <button
-                      className="text-button"
-                      onClick={() => {
-                        setSearch("");
-                        setPlayerFilter("");
-                        setDateFrom("");
-                        setDateTo("");
-                        setMapFilter("");
-                        setGroupFilter("");
-                      }}
-                    >
-                      {t("Сбросить")}
-                    </button>
-                  </details>
                   <div className="attempt-list">
                     {visible.map((r) => (
                       <div
@@ -1134,10 +1007,7 @@ function App() {
           {page === "queue" && (
             <>
               <div className="page-heading">
-                <h1>
-                  {t("Рендеринг")}
-                  <span>.</span>
-                </h1>
+                <h1>{t("Очередь")}</h1>
                 <p>
                   {t(
                     "Задания выполняются по очереди. Настройки сохраняются в текущей сессии.",
@@ -1145,106 +1015,113 @@ function App() {
                 </p>
               </div>
               <div className="jobs">
-                {state.jobs.map((j) => (
-                  <div className="job-card" key={j.id}>
-                    <div className="job-icon">
-                      <Clapperboard size={22} />
-                    </div>
-                    <div className="job-body">
-                      <div>
-                        <h3>{j.name}</h3>
-                        <span className={`job-status ${j.status}`}>
+                {[...state.jobs]
+                  .sort(
+                    (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
+                  )
+                  .map((j) => (
+                    <div className="job-card" key={j.id}>
+                      <div className="job-icon">
+                        <Clapperboard size={22} />
+                      </div>
+                      <div className="job-body">
+                        <div>
+                          <h3>{j.name}</h3>
+                          <span className={`job-status ${j.status}`}>
+                            {
+                              (
+                                {
+                                  queued: t("В очереди"),
+                                  running: t("Рендеринг"),
+                                  completed: t("Готово"),
+                                  failed: t("Ошибка"),
+                                  cancelled: t("Отменено"),
+                                  interrupted: t("Прервано"),
+                                } as Record<string, string>
+                              )[j.status]
+                            }
+                          </span>
+                        </div>
+                        <p>
                           {
                             (
                               {
-                                queued: t("В очереди"),
-                                running: t("Рендеринг"),
-                                completed: t("Готово"),
-                                failed: t("Ошибка"),
-                                cancelled: t("Отменено"),
-                                interrupted: t("Прервано"),
+                                record: t("Видео"),
+                                preview: t("Предпросмотр 10 секунд"),
+                                screenshot: t("Снимок"),
+                                watch: t("Окно просмотра"),
                               } as Record<string, string>
-                            )[j.status]
-                          }
-                        </span>
-                      </div>
-                      <p>
-                        {
-                          (
-                            {
-                              record: t("Видео"),
-                              preview: t("Предпросмотр 10 секунд"),
-                              screenshot: t("Снимок"),
-                              watch: t("Окно просмотра"),
-                            } as Record<string, string>
-                          )[j.action]
-                        }{" "}
-                        · {fmtDate(j.createdAt)}
-                      </p>
-                      {j.status === "running" && (
-                        <div className="progress">
-                          <i style={{ width: j.progress + "%" }} />
-                          <span>{j.progress}%</span>
-                        </div>
-                      )}
-                      {j.error && <p className="warning">{j.error}</p>}
-                      <div className="job-actions">
-                        <button
-                          className="text-button"
-                          onClick={() => setSelectedJob(j)}
-                        >
-                          {t("Журнал")}
-                        </button>
-                        {["queued", "running"].includes(j.status) ? (
-                          <button
-                            className="text-button danger"
-                            onClick={() =>
-                              perform(t("Отменяем…"), async () => {
-                                await api("/jobs/" + j.id + "/cancel", "POST");
-                                await refresh();
-                              })
-                            }
-                          >
-                            {t("Отменить")}
-                          </button>
-                        ) : (
+                            )[j.action]
+                          }{" "}
+                          · {fmtDate(j.createdAt)}
+                        </p>
+                        {j.status === "running" && (
+                          <div className="progress">
+                            <i style={{ width: j.progress + "%" }} />
+                            <span>{j.progress}%</span>
+                          </div>
+                        )}
+                        {j.error && <p className="warning">{j.error}</p>}
+                        <div className="job-actions">
                           <button
                             className="text-button"
-                            disabled={
-                              j.action === "watch" || j.retryable === false
-                            }
-                            onClick={() =>
-                              perform(t("Запускаем повторно…"), async () => {
-                                await api("/jobs/" + j.id + "/retry", "POST");
-                                await refresh();
-                              })
-                            }
+                            onClick={() => setSelectedJob(j)}
                           >
-                            {t("Повторить")}
+                            {t("Журнал")}
                           </button>
-                        )}
-                        {j.status === "completed" && j.action !== "watch" && (
-                          <>
+                          {["queued", "running"].includes(j.status) ? (
+                            <button
+                              className="text-button danger"
+                              onClick={() =>
+                                perform(t("Отменяем…"), async () => {
+                                  await api(
+                                    "/jobs/" + j.id + "/cancel",
+                                    "POST",
+                                  );
+                                  await refresh();
+                                })
+                              }
+                            >
+                              {t("Отменить")}
+                            </button>
+                          ) : (
                             <button
                               className="text-button"
-                              onClick={() => setSelectedJob(j)}
+                              disabled={
+                                j.action === "watch" || j.retryable === false
+                              }
+                              onClick={() =>
+                                perform(t("Запускаем повторно…"), async () => {
+                                  await api("/jobs/" + j.id + "/retry", "POST");
+                                  await refresh();
+                                })
+                              }
                             >
-                              <Play size={14} />
-                              {t("Посмотреть")}
+                              {t("Повторить")}
                             </button>
-                            <a
-                              className="text-button"
-                              href={`/api/jobs/${j.id}/output?download=1`}
-                            >
-                              <ArrowDownToLine size={14} />
-                              {t("Сохранить файл")}
-                            </a>
-                          </>
-                        )}
+                          )}
+                          {j.status === "completed" && j.action !== "watch" && (
+                            <>
+                              <button
+                                className="text-button"
+                                onClick={() => setSelectedJob(j)}
+                              >
+                                <Play size={14} />
+                                {t("Посмотреть")}
+                              </button>
+                              <a
+                                className="text-button"
+                                href={`/api/jobs/${j.id}/output?download=1`}
+                              >
+                                <ArrowDownToLine size={14} />
+                                {t("Сохранить файл")}
+                              </a>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
               {!state.jobs.length && (
                 <div className="empty-library">
@@ -1408,7 +1285,7 @@ function App() {
             </>
           )}
         </div>
-        <VinylStage map={map} />
+        <VinylStage map={map} timelineHost={timelineHost} />
         <aside className="scene-rail" key={`scene-${page}`}>
           {page === "library" ? (
             <>
