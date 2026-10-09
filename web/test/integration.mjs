@@ -132,6 +132,23 @@ try {
   assert.equal(imported.imported.length, 2);
   assert.equal(imported.errors.length, 0);
   assert.equal((await request("/state")).maps.length, 1);
+  const mapMedia = await request(`/maps/${fixture.hash}/media`);
+  assert.equal(mapMedia.background, null);
+  assert.equal(mapMedia.audio, `/api/maps/${fixture.hash}/media/audio`);
+  const audioRange = await fetch(`http://127.0.0.1:${port}${mapMedia.audio}`, {
+    headers: { Range: "bytes=0-43" },
+  });
+  assert.equal(audioRange.status, 206);
+  assert.equal(audioRange.headers.get("content-type"), "audio/wav");
+  assert.equal((await audioRange.arrayBuffer()).byteLength, 44);
+  assert.equal(
+    (
+      await fetch(
+        `http://127.0.0.1:${port}/api/maps/${fixture.hash}/media/background`,
+      )
+    ).status,
+    404,
+  );
   const duplicate = new FormData();
   duplicate.append(
     "files",

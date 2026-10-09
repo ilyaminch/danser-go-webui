@@ -8,7 +8,7 @@ Built on **[Wieku/danser-go](https://github.com/Wieku/danser-go)**. This is an u
 
 ## Features
 
-- Batch `.osr` import, duplicate detection, player/date filters, and replay groups.
+- Batch `.osr` import, duplicate detection, replay details, and replay groups.
 - Arbitrary color gradients ordered by replay date, per-player gradients, player colors, and manual overrides. Colors remain attached to the same replay when the engine sorts players or eliminates them.
 - All five native comparison modes: Combo Break, Max Combo, Replay Showcase, Vs Mode, and SS or Quit. Configure the minimum number of surviving players, initial grace period, revival, sorting, and the additional danser cursor.
 - Local maps from osu!stable Songs folders or osu!lazer storage. Replay imports and selections resolve the exact map using its MD5 hash.
@@ -19,7 +19,15 @@ Built on **[Wieku/danser-go](https://github.com/Wieku/danser-go)**. This is an u
 - CS, AR, OD, and HP overrides are available only for map visualization. Replay video preserves the map difficulty and each attempt's recorded mods, including Difficulty Adjust; saved visualization overrides are ignored for replay rendering.
 - Recording defaults: NVIDIA H.264 NVENC, preset p4, CQ 22, High profile, 1080p60 MP4, yuv420p, motion blur disabled, and no encoding speed cap. Select libx264 on computers without working NVENC. NVENC preset and quality are available beside the encoder.
 
-The application currently has a **Russian-language interface**. Windows is the tested platform.
+The interface supports **Russian and English**, selectable in the header. Engine setting names and logs retain their original language. Windows is the tested platform.
+
+## Redesigned workspace
+
+The workspace is arranged around a persistent vinyl stage, with compact replay/map controls on the left and mode, cursor color, and skin controls on the right. Recommended video presets sit in the export dock; detailed encoding, timing, launch, JSON, and engine settings remain available in expandable sections.
+
+Selecting a map loads its background and audio from the filenames in the actual `.osu`, including read-only lazer resources. Music starts automatically when a map is selected, using the current volume and mute preferences (25% initially). If the browser blocks autoplay, use the play button. Volume, mute, language, and animation preferences stay in the browser tab session. Listening does not change the rendered video's audio. Missing artwork or music leaves the rendering workflow available.
+
+The vinyl grooves, reflections, and rhythm background are authored CSS/SVG. Exo 2 interface and Comfortaa branding fonts are bundled locally with their OFL licenses; see [`web/public/ASSETS.md`](web/public/ASSETS.md). The fullscreen 1920 × 1080 workspace keeps export visible and scrolls long panels independently; narrow screens use a stacked flow. Animation can be disabled and respects reduced-motion preferences.
 
 ## Requirements
 
@@ -62,7 +70,7 @@ Alternatively, start the built service using `npm start` from `web`. For fronten
 
 1. Open **Connection** (`Подключение`). Configure FFmpeg and either a stable Songs directory or a lazer storage root. The bundled Studio executable is detected automatically when present.
 2. For lazer, use **Find on this computer** (`Найти на компьютере`) and **Connect and refresh index** (`Подключить и обновить индекс`). A Songs directory is optional in this case. For stable, save the paths; importing replays looks up the map automatically.
-3. Drop `.osr` files into **Create video** or import a folder. All attempts must belong to **one exact map version**; mixed-map batches are rejected without importing any files. Attempts are selected automatically.
+3. Drop `.osr` files into **Create video** using the file picker. All attempts must belong to **one exact map version**; mixed-map batches are rejected without importing any files. Attempts are selected automatically.
 4. Choose a palette and comparison mode. Replay Showcase keeps attempts visible; Combo Break eliminates them on a combo break. Setting the minimum surviving players to zero allows every attempt to be eliminated.
 5. Optionally render a short preview, then create the video. Outputs and logs appear in the rendering queue. After successful full video creation, uploaded replay copies are deleted once queued jobs finish using them. Settings stay available for the next video within the same browser tab session.
 
@@ -148,3 +156,7 @@ The frontend redesign will build on this baseline. Runtime builds, local replays
 Studio adds `-studio-version`, a `-studio-manifest` protocol for replay batches and stable colors keyed by replay SHA-256, and `DANSER_STUDIO_FFMPEG` for selecting FFmpeg. The original engine and its notices remain in `danser-go`.
 
 Project source is provided under **GPL-3.0**, following the original engine; see [LICENSE](LICENSE) and [upstream credits](danser-go/CREDITS.md). Bundled third-party assets and native libraries retain their respective licenses. Binary distribution must include the applicable source and license notices. See [Wieku/danser-go](https://github.com/Wieku/danser-go) for upstream development and documentation.
+
+Music preview starts at the selected .osu PreviewTime (milliseconds). Missing, negative, malformed or out-of-track values fall back to 40% of the map end time, capped by audio duration; if map timing is unavailable, audio duration is used. Seeking occurs after audio metadata loads, before autoplay. This affects listening only, not video export.
+
+Music seeking lives in a thin pink strip below the header, with elapsed/total time and a keyboard-accessible slider. Play/pause, mute and volume sit at the scene edge. On Full HD the larger record owns the scene height and map metadata sits at the upper left. Fine 4.5px grooves retain neutral reflections; the center uses untinted map artwork with a dark spindle surround and no rotating text or product branding. Pink remains the action and music accent; the cyan music treatment was removed at the user request. On narrow screens audio controls form a compact row above the record.
