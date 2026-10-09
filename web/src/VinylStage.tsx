@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import type { MapInfo } from "./render-types";
 import { t } from "./i18n";
 import { previewStart } from "../shared/music.mjs";
+import { storedVolume, readSession, writeSession } from "../shared/session.mjs";
 
 export function VinylStage({
   map,
@@ -22,13 +23,13 @@ export function VinylStage({
     [elapsed, setElapsed] = useState(0),
     [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(() =>
-    Number(sessionStorage.getItem("studio-music-volume") ?? 0.25),
+    storedVolume(readSession("studio-music-volume")),
   );
   const [muted, setMuted] = useState(
-    () => sessionStorage.getItem("studio-music-muted") === "true",
+    () => readSession("studio-music-muted") === "true",
   );
   const [motion, setMotion] = useState(
-    () => sessionStorage.getItem("studio-motion") !== "false",
+    () => readSession("studio-motion") !== "false",
   );
   const [error, setError] = useState("");
   useEffect(() => {
@@ -56,8 +57,8 @@ export function VinylStage({
       audio.current.volume = Math.max(0, Math.min(1, volume));
       audio.current.muted = muted;
     }
-    sessionStorage.setItem("studio-music-volume", String(volume));
-    sessionStorage.setItem("studio-music-muted", String(muted));
+    writeSession("studio-music-volume", String(volume));
+    writeSession("studio-music-muted", String(muted));
   }, [volume, muted, media.audio]);
   useEffect(() => {
     const player = audio.current;
@@ -101,7 +102,7 @@ export function VinylStage({
           aria-pressed={motion}
           onClick={() => {
             setMotion(!motion);
-            sessionStorage.setItem("studio-motion", String(!motion));
+            writeSession("studio-motion", String(!motion));
           }}
         >
           {t("Анимация")}

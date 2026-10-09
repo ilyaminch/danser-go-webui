@@ -1,13 +1,31 @@
+import { readSession, writeSession } from "../shared/session.mjs";
 export type Language = "ru" | "en";
-let language: Language =
-  sessionStorage.getItem("studio-language") === "en" ? "en" : "ru";
+let language: Language = readSession("studio-language") === "en" ? "en" : "ru";
 export const getLanguage = () => language;
 export function setLanguage(value: Language) {
   language = value;
-  sessionStorage.setItem("studio-language", value);
+  writeSession("studio-language", value);
   document.documentElement.lang = value;
 }
 const english: Record<string, string> = {
+  "Добавить реплеи": "Add replays",
+  "Градиент по датам": "Date gradient",
+  Включён: "On",
+  Выключен: "Off",
+  "Настроить градиент": "Edit gradient",
+  "Настройки градиента": "Gradient settings",
+  "Закрыть настройки градиента": "Close gradient settings",
+  "По всей пачке · цвета не меняются при выборе":
+    "Whole batch · selection keeps colors",
+  "Текущие цвета зафиксированы": "Current colors are fixed",
+  "Ручных цветов: {count}": "Manual colors: {count}",
+  Ручной: "Manual",
+  Авто: "Auto",
+  "Фикс.": "Fixed",
+  "Включите градиент, чтобы изменить автоматические цвета.":
+    "Turn on the gradient to edit automatic colors.",
+  "Ручной цвет попытки имеет приоритет над градиентом.":
+    "An attempt’s manual color overrides the date gradient.",
   "JSON настроек движка": "Engine settings JSON",
   "Поиск карт": "Search maps",
   "Название, исполнитель или сложность": "Title, artist or difficulty",

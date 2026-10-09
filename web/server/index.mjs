@@ -1,4 +1,6 @@
 import express from "express";
+import { randomUUID } from "node:crypto";
+import { workspaceReplays } from "./replay-workspace.mjs";
 import multer from "multer";
 import { mkdir, readFile, writeFile, readdir, access } from "node:fs/promises";
 import { existsSync } from "node:fs";
@@ -73,7 +75,7 @@ const asyncRoute = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res)).catch(next);
 app.get("/api/state", (req, res) =>
   res.json({
-    replays: store.list("replay"),
+    replays: workspaceReplays(store),
     maps: store.list("map"),
     jobs: store.list("job").map(({ config, project, ...job }) => job),
     config: store.get("config", "local"),
@@ -205,6 +207,9 @@ app.put(
   }),
 );
 async function importFiles(files) {
+  return renderer.withReplayLock(() => importFilesUnlocked(files));
+}
+async function importFilesUnlocked(files) {
   const imported = [],
     duplicates = [],
     errors = [],
@@ -225,23 +230,27 @@ async function importFiles(files) {
     throw new Error(
       "Загрузка отклонена: реплеи относятся к разным картам. Загрузите попытки только одной карты.",
     );
-  const retained = store.list("replay");
+  const retained = workspaceReplays(store);
   if (
     parsed.length &&
     retained.some((r) => r.mapHash !== parsed[0].replay.mapHash)
   )
     throw new Error(
-      "Сначала завершите текущий рендер или очистите его реплеи. Для одного видео нужна одна карта.",
+      "Нажмите «Новый рендер» перед загрузкой другой карты. Для одного видео нужна одна карта.",
     );
   if (errors.length) return { imported, duplicates, errors, mapErrors: [] };
   for (const { file, replay } of parsed) {
-    if (store.get("replay", replay.id)) {
+    const existing = store.get("replay", replay.id);
+    if (existing && existing.workspace !== false) {
       duplicates.push(file.name);
       continue;
     }
     const destination = path.join(dataDir, "library", `${replay.id}.osr`);
-    await writeFile(destination, file.buffer);
+    if (!existing) await writeFile(destination, file.buffer);
     replay.path = destination;
+    // Reusing a file must not let an earlier job consume this new upload.
+    replay.uploadId = randomUUID();
+    replay.workspace = true;
     store.put("replay", replay);
     imported.push(replay);
   }
