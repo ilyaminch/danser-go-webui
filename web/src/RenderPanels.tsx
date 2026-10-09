@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 import {
   Activity,
   ArrowLeftRight,
@@ -40,36 +41,38 @@ export function PalettePanel({
     <section className="workflow-card">
       {project.kind !== "comparison" && (
         <p className="note">
-          Закреплённые цвета применяются в сценарии «Сравнение реплеев».
+          {t("Закреплённые цвета применяются в сценарии «Сравнение реплеев».")}
         </p>
       )}
       <div className="section-title">
         <PaletteIcon size={16} />
-        <h3>Палитра курсоров</h3>
-        <span>ПО ДАТЕ</span>
+        <h3>{t("Палитра курсоров")}</h3>
+        <span>{t("ПО ДАТЕ")}</span>
       </div>
-      <FieldLabel label="Как назначать цвета">
+      <FieldLabel label={t("Как назначать цвета")}>
         <select
           value={project.palette.mode}
           onChange={(e) => updatePalette("mode", e.target.value)}
         >
-          <option value="date">Общий градиент по датам</option>
-          <option value="per-player">Градиент внутри каждого игрока</option>
-          <option value="player">Цвет каждого игрока</option>
+          <option value="date">{t("Общий градиент по датам")}</option>
+          <option value="per-player">
+            {t("Градиент внутри каждого игрока")}
+          </option>
+          <option value="player">{t("Цвет каждого игрока")}</option>
         </select>
       </FieldLabel>
       {project.palette.mode !== "player" ? (
         <>
           <div className="palette-preview" style={{ background: paletteCss }} />
           <div className="gradient-labels">
-            <span>Старые попытки</span>
-            <span>Новые попытки</span>
+            <span>{t("Старые попытки")}</span>
+            <span>{t("Новые попытки")}</span>
           </div>
           <div className="color-stops">
             {project.palette.stops.map((c, i) => (
               <div key={i}>
                 <input
-                  aria-label={`Цвет градиента ${i + 1}`}
+                  aria-label={t("Цвет градиента {n}", { n: i + 1 })}
                   type="color"
                   value={c}
                   onChange={(e) =>
@@ -85,7 +88,7 @@ export function PalettePanel({
                 {project.palette.stops.length > 2 && (
                   <button
                     className="icon-btn"
-                    title="Убрать точку"
+                    title={t("Убрать точку")}
                     onClick={() =>
                       updatePalette(
                         "stops",
@@ -111,26 +114,26 @@ export function PalettePanel({
               }
             >
               <Plus size={13} />
-              Точка
+              {t("Точка")}
             </button>
             <button
               className="text-button"
               onClick={() => updatePalette("reverse", !project.palette.reverse)}
             >
               <ArrowLeftRight size={13} />
-              Развернуть
+              {t("Развернуть")}
             </button>
           </div>
           <div className="preset-swatches">
             {[
-              ["#f06b78", "#f5cf76", "#a4e878"],
-              ["#8597fd", "#b4a0fa", "#f3b0ce"],
+              ["#ff66aa", "#9565f5", "#35ced3"],
+              ["#5798ff", "#9565f5", "#ff66aa"],
               ["#42bacc", "#a4e878"],
               ["#ed8556", "#b59cf9"],
             ].map((stops, i) => (
               <button
                 key={i}
-                aria-label={`Пресет градиента ${i + 1}`}
+                aria-label={t("Пресет градиента {n}", { n: i + 1 })}
                 style={{
                   background: `linear-gradient(90deg,${stops.join(",")})`,
                 }}
@@ -138,13 +141,15 @@ export function PalettePanel({
               />
             ))}
           </div>
-          <FieldLabel label="Распределение">
+          <FieldLabel label={t("Распределение")}>
             <select
               value={project.palette.spacing}
               onChange={(e) => updatePalette("spacing", e.target.value)}
             >
-              <option value="rank">Равномерно между датами</option>
-              <option value="time">По реальным интервалам времени</option>
+              <option value="rank">{t("Равномерно между датами")}</option>
+              <option value="time">
+                {t("По реальным интервалам времени")}
+              </option>
             </select>
           </FieldLabel>
         </>
@@ -154,7 +159,7 @@ export function PalettePanel({
             <label key={p}>
               {p}
               <input
-                aria-label={`Цвет игрока ${p}`}
+                aria-label={t("Цвет игрока {player}", { player: p })}
                 type="color"
                 value={project.palette.players[p] ?? "#8b9cf7"}
                 onChange={(e) =>
@@ -166,21 +171,24 @@ export function PalettePanel({
               />
             </label>
           ))}
-          {!selected.length && <p className="note">Добавьте реплеи игроков.</p>}
+          {!selected.length && (
+            <p className="note">{t("Добавьте реплеи игроков.")}</p>
+          )}
         </div>
       )}
       <div className="tip">
         <Sparkles size={16} />
         <p>
-          Цвет закреплён за попыткой и сохраняется после выбывания. Любой курсор
-          можно перекрасить вручную в таблице.
+          {t(
+            "Цвет закреплён за попыткой. Ручной цвет можно задать в списке слева.",
+          )}
         </p>
       </div>
       <button
         className="text-button"
         onClick={() => updatePalette("overrides", {})}
       >
-        Сбросить ручные цвета
+        {t("Сбросить ручные цвета")}
       </button>
     </section>
   );
@@ -197,9 +205,9 @@ export function RulesPanel({
     <section className="workflow-card">
       <div className="section-title">
         <Activity size={16} />
-        <h3>Правила сравнения</h3>
+        <h3>{t("Правила сравнения")}</h3>
       </div>
-      <FieldLabel label="Режим движка">
+      <FieldLabel label={t("Режим движка")}>
         <select
           value={project.rules.mode}
           onChange={(e) => updateRules("mode", Number(e.target.value))}
@@ -211,12 +219,12 @@ export function RulesPanel({
           ))}
         </select>
       </FieldLabel>
-      <p className="note">{modeHints[project.rules.mode]}</p>
+      <p className="note">{t(modeHints[project.rules.mode])}</p>
       {[0, 1, 4].includes(project.rules.mode) && (
         <>
           <FieldLabel
-            label="Минимум оставшихся игроков"
-            hint="0 — могут выбыть все. 1 — последний игрок остаётся."
+            label={t("Минимум оставшихся игроков")}
+            hint={t("0 — могут выбыть все. 1 — последний игрок остаётся.")}
           >
             <input
               type="number"
@@ -230,8 +238,8 @@ export function RulesPanel({
           </FieldLabel>
           {project.rules.mode === 0 && (
             <FieldLabel
-              label="Иммунитет до момента, с"
-              hint="−10 — без начального иммунитета."
+              label={t("Иммунитет до момента, с")}
+              hint={t("−10 — без начального иммунитета.")}
             >
               <input
                 type="number"
@@ -242,37 +250,38 @@ export function RulesPanel({
             </FieldLabel>
           )}
           <Toggle
-            label="Вернуть выбывших в конце"
+            label={t("Вернуть выбывших в конце")}
             value={project.rules.revive}
             onChange={(v) => updateRules("revive", v)}
           />
         </>
       )}
       <Toggle
-        label="Добавить курсор danser"
+        label={t("Добавить курсор danser")}
         value={project.rules.addDanser}
         onChange={(v) => updateRules("addDanser", v)}
       />
       <Toggle
-        label="Сортировать таблицу в реальном времени"
+        label={t("Сортировать таблицу в реальном времени")}
         value={project.rules.liveSort}
         onChange={(v) => updateRules("liveSort", v)}
       />
-      <FieldLabel label="Рейтинг игроков">
+      <FieldLabel label={t("Рейтинг игроков")}>
         <select
           value={project.rules.sortBy}
           onChange={(e) => updateRules("sortBy", e.target.value)}
         >
-          <option value="Score">По счёту</option>
-          <option value="PP">По PP</option>
-          <option value="Accuracy">По точности</option>
+          <option value="Score">{t("По счёту")}</option>
+          <option value="PP">{t("По PP")}</option>
+          <option value="Accuracy">{t("По точности")}</option>
         </select>
       </FieldLabel>
       <div className="tip">
         <Activity size={16} />
         <p>
-          Для прогресса тренировок: Combo Break, минимум 0, без возвращения в
-          конце. Старые попытки выбывают, новые продолжают карту.
+          {t(
+            "Combo Break убирает выбывшие попытки. Replay Showcase оставляет все курсоры видимыми.",
+          )}
         </p>
       </div>
     </section>
@@ -300,9 +309,9 @@ export function ExportPanel({
     <section className="workflow-card">
       <div className="section-title">
         <Clapperboard size={16} />
-        <h3>Готовое видео</h3>
+        <h3>{t("Готовое видео")}</h3>
       </div>
-      <FieldLabel label="Пресет">
+      <FieldLabel label={t("Пресет")}>
         <select
           value={`${project.export.width}x${project.export.height}x${project.export.fps}`}
           onChange={(e) => {
@@ -313,18 +322,18 @@ export function ExportPanel({
           <option value="1920x1080x60">Full HD · 1080p / 60 fps</option>
           <option value="2560x1440x60">QHD · 1440p / 60 fps</option>
           <option value="3840x2160x60">4K · 2160p / 60 fps</option>
-          <option value="1280x720x30">Быстро · 720p / 30 fps</option>
+          <option value="1280x720x30">{t("Быстро · 720p / 30 fps")}</option>
           <option
             value={`${project.export.width}x${project.export.height}x${project.export.fps}`}
           >
-            Текущие значения
+            {t("Текущие значения")}
           </option>
         </select>
       </FieldLabel>
       <div className="form-grid">
         {[
-          ["width", "Ширина"],
-          ["height", "Высота"],
+          ["width", t("Ширина")],
+          ["height", t("Высота")],
           ["fps", "FPS"],
         ].map(([key, label]) => (
           <FieldLabel key={key} label={label}>
@@ -336,7 +345,7 @@ export function ExportPanel({
           </FieldLabel>
         ))}
       </div>
-      <FieldLabel label="Видеокодек">
+      <FieldLabel label={t("Видеокодек")}>
         <select
           value={project.export.encoder}
           onChange={(e) => updateExport("encoder", e.target.value)}
@@ -358,7 +367,7 @@ export function ExportPanel({
           ))}
         </select>
       </FieldLabel>
-      <FieldLabel label="Контейнер">
+      <FieldLabel label={t("Контейнер")}>
         <select
           value={project.export.container}
           onChange={(e) => updateExport("container", e.target.value)}
@@ -370,8 +379,8 @@ export function ExportPanel({
       {project.export.encoder === "h264_nvenc" && (
         <div className="form-grid">
           <FieldLabel
-            label="Пресет NVENC"
-            hint="p1 — быстрее, p7 — лучше сжатие."
+            label={t("Пресет NVENC")}
+            hint={t("p1 — быстрее, p7 — лучше сжатие.")}
           >
             <select
               value={project.configPatch.Recording?.h264_nvenc?.Preset ?? "p4"}
@@ -394,13 +403,13 @@ export function ExportPanel({
                 <option
                   key={n}
                   value={`p${n}`}
-                >{`p${n}${n === 4 ? " — баланс" : n === 1 ? " — самый быстрый" : ""}`}</option>
+                >{`p${n}${n === 4 ? t(" — баланс") : n === 1 ? t(" — самый быстрый") : ""}`}</option>
               ))}
             </select>
           </FieldLabel>
           <FieldLabel
-            label="Качество NVENC (CQ)"
-            hint="Меньшее число — выше качество и больше файл."
+            label={t("Качество NVENC (CQ)")}
+            hint={t("Меньшее число — выше качество и больше файл.")}
           >
             <input
               type="number"
@@ -427,7 +436,7 @@ export function ExportPanel({
         </div>
       )}
       <div className="form-grid">
-        <FieldLabel label="Начало, с">
+        <FieldLabel label={t("Начало, с")}>
           <input
             type="number"
             min="0"
@@ -436,11 +445,11 @@ export function ExportPanel({
             onChange={(e) => updateLaunch("start", Number(e.target.value))}
           />
         </FieldLabel>
-        <FieldLabel label="Конец, с">
+        <FieldLabel label={t("Конец, с")}>
           <input
             type="number"
             step="any"
-            placeholder="Вся карта"
+            placeholder={t("Вся карта")}
             value={project.launch.end ?? ""}
             onChange={(e) =>
               updateLaunch(
@@ -452,15 +461,16 @@ export function ExportPanel({
         </FieldLabel>
       </div>
       <p className="note">
-        Аппаратный кодек должен поддерживаться вашим FFmpeg и видеокартой. Для
-        браузера подходит MP4 / H.264 / AAC.
+        {t(
+          "Аппаратный кодек должен поддерживаться вашим FFmpeg и видеокартой. Для браузера подходит MP4 / H.264 / AAC.",
+        )}
       </p>
       <button
         className="button ghost full"
         disabled={!!busy || !engineReady}
         onClick={() => run("screenshot")}
       >
-        Снимок выбранного момента
+        {t("Снимок выбранного момента")}
       </button>
     </section>
   );
@@ -477,30 +487,30 @@ export function LaunchPanel({
 }) {
   return (
     <section className="workflow-card">
-      <h2>Параметры запуска</h2>
+      <h2>{t("Параметры запуска")}</h2>
       <div className="form-grid">
         {[
-          ["speed", "Скорость"],
+          ["speed", t("Скорость")],
           ["pitch", "Pitch"],
-          ["offset", "Локальный offset, мс"],
-          ["cursors", "Mirror: курсоры"],
-          ["tag", "TAG: курсоры"],
-          ["screenshotTime", "Момент снимка, с"],
-          ["cs", "CS — размер кругов", "Выше значение — меньше круги."],
+          ["offset", t("Локальный offset, мс")],
+          ["cursors", t("Mirror: курсоры")],
+          ["tag", t("TAG: курсоры")],
+          ["screenshotTime", t("Момент снимка, с")],
+          ["cs", t("CS — размер кругов"), t("Выше значение — меньше круги.")],
           [
             "ar",
-            "AR — скорость появления",
-            "Выше значение — меньше времени на чтение объектов.",
+            t("AR — скорость появления"),
+            t("Выше значение — меньше времени на чтение объектов."),
           ],
           [
             "od",
-            "OD — точность попаданий",
-            "Выше значение — строже оценка попадания по времени.",
+            t("OD — точность попаданий"),
+            t("Выше значение — строже оценка попадания по времени."),
           ],
           [
             "hp",
-            "HP — сложность удержания здоровья",
-            "Выше значение — требовательнее шкала здоровья.",
+            t("HP — сложность удержания здоровья"),
+            t("Выше значение — требовательнее шкала здоровья."),
           ],
         ]
           .filter(
@@ -514,7 +524,7 @@ export function LaunchPanel({
                 type="number"
                 step="any"
                 value={project.launch[key] ?? ""}
-                placeholder="По умолчанию"
+                placeholder={t("По умолчанию")}
                 onChange={(e) =>
                   updateLaunch(
                     key,
@@ -528,8 +538,8 @@ export function LaunchPanel({
       {project.kind !== "comparison" && (
         <>
           <FieldLabel
-            label="Моды classic"
-            hint="Моды визуализации карты. Например HDHR."
+            label={t("Моды classic")}
+            hint={t("Моды визуализации карты. Например HDHR.")}
           >
             <input
               value={project.launch.mods ?? ""}
@@ -537,8 +547,10 @@ export function LaunchPanel({
             />
           </FieldLabel>
           <FieldLabel
-            label="Моды lazer (mods2)"
-            hint="JSON-массив с acronym и settings; не совмещается с classic mods."
+            label={t("Моды lazer (mods2)")}
+            hint={t(
+              "JSON-массив с acronym и settings; не совмещается с classic mods.",
+            )}
           >
             <textarea
               value={project.launch.mods2 ?? ""}
@@ -549,12 +561,12 @@ export function LaunchPanel({
         </>
       )}
       {[
-        ["skip", "Пропустить вступление"],
-        ["quickstart", "Быстрый старт без lead-in"],
-        ["noDbCheck", "Пропустить полную проверку базы"],
-        ["noUpdateCheck", "Не проверять обновления danser"],
-        ["debug", "Отладочная информация"],
-        ["gldebug", "Журнал OpenGL"],
+        ["skip", t("Пропустить вступление")],
+        ["quickstart", t("Быстрый старт без lead-in")],
+        ["noDbCheck", t("Пропустить полную проверку базы")],
+        ["noUpdateCheck", t("Не проверять обновления danser")],
+        ["debug", t("Отладочная информация")],
+        ["gldebug", t("Журнал OpenGL")],
       ].map(([key, label]) => (
         <Toggle
           key={key}
@@ -565,8 +577,12 @@ export function LaunchPanel({
       ))}
       <p className="note">
         {project.kind === "comparison"
-          ? "Сложность берётся из карты и исходных модов каждой попытки, включая Difficulty Adjust."
-          : "CS/AR/OD/HP изменяют сложность визуализации карты. Пустое поле сохраняет значение карты с выбранными модами. Mirror и TAG управляют автоматическими курсорами."}
+          ? t(
+              "Сложность берётся из карты и исходных модов каждой попытки, включая Difficulty Adjust.",
+            )
+          : t(
+              "CS/AR/OD/HP изменяют сложность визуализации карты. Пустое поле сохраняет значение карты с выбранными модами. Mirror и TAG управляют автоматическими курсорами.",
+            )}
       </p>
     </section>
   );
