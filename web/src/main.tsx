@@ -170,6 +170,7 @@ const fmtDate = (date: string | null) =>
 const num = (n: number) =>
   new Intl.NumberFormat(getLanguage() === "ru" ? "ru-RU" : "en-GB").format(n);
 function App() {
+  const [timelineHost, setTimelineHost] = useState<HTMLDivElement | null>(null);
   const [language, changeLanguage] = useState<Language>(getLanguage);
   const [sceneTab, setSceneTab] = useState("rules");
   const [showExport, setShowExport] = useState(false);
@@ -682,6 +683,7 @@ function App() {
           </label>
         </div>
       </header>
+      <div className="music-timeline-host" ref={setTimelineHost} />
       {notice && (
         <div
           role={notice.error ? "alert" : "status"}
@@ -1283,7 +1285,7 @@ function App() {
             </>
           )}
         </div>
-        <VinylStage map={map} />
+        <VinylStage map={map} timelineHost={timelineHost} />
         <aside className="scene-rail" key={`scene-${page}`}>
           {page === "library" ? (
             <>
