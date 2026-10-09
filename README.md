@@ -8,7 +8,7 @@ A local video studio for **osu!standard**, built on [danser-go](https://github.c
 
 - Import `.osr` attempts of one exact map version, matched by MD5.
 - Use maps from stable Songs, read-only lazer storage, or `.osz` imports.
-- Choose comparison modes, elimination rules, date gradients, player colors, and individual overrides.
+- Choose comparison modes, elimination rules, a date gradient, and individual attempt colors. Hit counts stay visible on each attempt.
 - Load local skins or `.osk` archives; keep access to all engine settings.
 - Export MP4/MKV, make short video previews or PNG screenshots, and manage jobs with progress, logs, cancellation, and retry.
 - Listen from the map's `PreviewTime`, with seeking, volume, mute, and optional animation.
@@ -35,6 +35,8 @@ cd ..
 ## Use
 
 Under **Create**, import replays or choose **Map** and a visualization mode. Set the engine mode, cursor colors, and skin; choose a video preset, optionally preview, then create the video. Results appear in **Queue**. Detailed encoding options and engine settings remain available below the workspace.
+
+**New render** clears the current attempts while preserving session settings. You can upload another map while earlier jobs finish with their own replay copies and settings. Temporary copies are removed after a successful video; previews, failed jobs, and cancelled jobs retain their copies for retry.
 
 Replay videos retain recorded mods. CS/AR/OD/HP overrides apply only to map visualization. Default recording uses NVENC; select libx264 if hardware encoding is unavailable.
 

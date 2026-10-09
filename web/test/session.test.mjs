@@ -40,7 +40,7 @@ test("session restoration tolerates invalid/partial data and restores nested def
       rules: null,
       export: { encoder: "libx264" },
       launch: { ar: 10 },
-      palette: { stops: null, players: null },
+      palette: { mode: "per-player", stops: null, players: null },
       configPatch: null,
     }),
     true,
@@ -51,6 +51,7 @@ test("session restoration tolerates invalid/partial data and restores nested def
   assert.deepEqual(p.rules, defaults().rules);
   assert.deepEqual(p.palette.stops, defaults().palette.stops);
   assert.deepEqual(p.palette.players, {});
+  assert.equal(p.palette.mode, "date");
   assert.equal(p.export.width, 1920);
   assert.equal(p.export.encoder, "libx264");
   assert.deepEqual(p.configPatch, defaults().configPatch);

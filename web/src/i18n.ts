@@ -8,6 +8,8 @@ export function setLanguage(value: Language) {
   document.documentElement.lang = value;
 }
 const english: Record<string, string> = {
+  "Ручной цвет попытки имеет приоритет над градиентом.":
+    "An attempt’s manual color overrides the date gradient.",
   "JSON настроек движка": "Engine settings JSON",
   "Поиск карт": "Search maps",
   "Название, исполнитель или сложность": "Title, artist or difficulty",

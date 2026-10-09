@@ -32,7 +32,7 @@ import { t, getLanguage, setLanguage, type Language } from "./i18n";
 import type { Replay, MapInfo, Config, Project } from "./render-types";
 import { FieldLabel } from "./controls";
 import {
-  PalettePanel,
+  DateGradientPanel,
   RulesPanel,
   ExportPanel,
   LaunchPanel,
@@ -309,6 +309,7 @@ function App() {
     setProject((p) => ({ ...p, export: { ...p.export, [key]: value } }));
   const usesReplays = project.kind === "comparison";
   const scenarioChange = (kind: string) => {
+    if (kind === "comparison") setSceneTab("rules");
     setProject((p) => ({
       ...p,
       kind,
@@ -761,6 +762,14 @@ function App() {
                       {t("Снять")}
                     </button>
                   </div>
+                  <details className="date-gradient">
+                    <summary>{t("Общий градиент по датам")}</summary>
+                    <DateGradientPanel
+                      project={project}
+                      updatePalette={updatePalette}
+                      paletteCss={paletteCss}
+                    />
+                  </details>
                   <div className="attempt-list">
                     {visible.map((r) => (
                       <div
@@ -794,65 +803,50 @@ function App() {
                             })
                           }
                         />
-                        <details>
-                          <summary>
+                        <div className="attempt-stats">
+                          <span>
                             {r.accuracy.toFixed(2)}% · {num(r.combo)}x
-                          </summary>
-                          <p>{r.filename}</p>
-                          <p>
-                            {t("Счёт")}: {num(r.score)} · {t("Промахи")}:{" "}
-                            {r.misses}
-                          </p>
-                          <FieldLabel label={t("Группа")}>
-                            <input
-                              defaultValue={r.group}
-                              onBlur={(e) => {
-                                if (e.target.value !== r.group)
-                                  void perform(
-                                    t("Сохраняем группу…"),
-                                    async () => {
-                                      await api("/replays/" + r.id, "PATCH", {
-                                        group: e.target.value,
-                                      });
-                                      await refresh();
-                                    },
-                                  );
+                          </span>
+                          <div className="hit-counts">
+                            <span>
+                              300: <b>{num(r.count300 ?? 0)}</b>
+                            </span>
+                            <span>
+                              100: <b>{num(r.count100 ?? 0)}</b>
+                            </span>
+                            <span>
+                              50: <b>{num(r.count50 ?? 0)}</b>
+                            </span>
+                            <span>
+                              {t("Промахи")}: <b>{num(r.misses)}</b>
+                            </span>
+                          </div>
+                          {project.palette.overrides[r.id] && (
+                            <button
+                              className="text-button"
+                              onClick={() => {
+                                const overrides = {
+                                  ...project.palette.overrides,
+                                };
+                                delete overrides[r.id];
+                                updatePalette("overrides", overrides);
                               }}
-                            />
-                          </FieldLabel>
-                          <button
-                            className="text-button"
-                            onClick={() => {
-                              const overrides = {
-                                ...project.palette.overrides,
-                              };
-                              delete overrides[r.id];
-                              updatePalette("overrides", overrides);
-                            }}
-                          >
-                            {t("Снять ручной цвет")}
-                          </button>
-                        </details>
+                            >
+                              {t("Снять ручной цвет")}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                     {!visible.length && (
                       <p className="note">
-                        {state.replays.length
-                          ? t("Нет попыток с этими фильтрами")
-                          : t(
-                              "Ники, даты и цвета появятся здесь после загрузки",
-                            )}
+                        {t("Ники, даты и цвета появятся здесь после загрузки")}
                       </p>
                     )}
                   </div>
                   <button
                     className="text-button"
-                    disabled={
-                      !!busy ||
-                      state.jobs.some((j) =>
-                        ["queued", "running"].includes(j.status),
-                      )
-                    }
+                    disabled={!!busy}
                     onClick={() =>
                       perform(t("Очищаем реплеи…"), async () => {
                         await api("/replays", "DELETE");
@@ -923,7 +917,6 @@ function App() {
                             "Выберите карту из Songs / lazer или импортируйте .osz",
                           )}
                 </p>
-                {project.mapHash && <small>MD5: {project.mapHash}</small>}
                 {project.mapHash && !map && (
                   <p className="warning">
                     {t(
@@ -1273,7 +1266,9 @@ function App() {
               <div className="scene-tabs">
                 {[
                   { id: "rules", label: t("Режим") },
-                  { id: "colors", label: t("Курсоры") },
+                  ...(!usesReplays
+                    ? [{ id: "colors", label: t("Курсоры") }]
+                    : []),
                   { id: "skin", label: t("Скин") },
                 ].map((tab) => (
                   <button
@@ -1309,37 +1304,29 @@ function App() {
                   </details>
                 </>
               )}
-              {sceneTab === "colors" &&
-                (usesReplays ? (
-                  <PalettePanel
-                    project={project}
-                    selected={selected}
-                    updatePalette={updatePalette}
-                    paletteCss={paletteCss}
-                  />
-                ) : (
-                  <>
-                    <p className="note">
-                      {t(
-                        "Цвета автоматических курсоров настраиваются в разделе Cursor движка",
-                      )}
-                    </p>
-                    <button
-                      className="button ghost"
-                      onClick={() => {
-                        setSection("Cursor");
-                        document.querySelector<HTMLDetailsElement>(
-                          ".advanced",
-                        )!.open = true;
-                        document
-                          .querySelector(".advanced")
-                          ?.scrollIntoView({ behavior: "smooth" });
-                      }}
-                    >
-                      {t("Настроить Cursor")}
-                    </button>
-                  </>
-                ))}
+              {sceneTab === "colors" && !usesReplays && (
+                <>
+                  <p className="note">
+                    {t(
+                      "Цвета автоматических курсоров настраиваются в разделе Cursor движка",
+                    )}
+                  </p>
+                  <button
+                    className="button ghost"
+                    onClick={() => {
+                      setSection("Cursor");
+                      document.querySelector<HTMLDetailsElement>(
+                        ".advanced",
+                      )!.open = true;
+                      document
+                        .querySelector(".advanced")
+                        ?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                  >
+                    {t("Настроить Cursor")}
+                  </button>
+                </>
+              )}
               {sceneTab === "skin" && (
                 <>
                   <section className="workflow-card">

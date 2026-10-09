@@ -35,6 +35,7 @@ export function restoreRenderSettings(defaults, serialized, recordingMigrated) {
       palette: {
         ...defaults.palette,
         ...(object(saved.palette) ? saved.palette : {}),
+        mode: "date",
       },
       rules: { ...defaults.rules, ...(object(saved.rules) ? saved.rules : {}) },
       export: {

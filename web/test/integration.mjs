@@ -335,6 +335,36 @@ try {
     action: "screenshot",
   });
   console.log(`Integration jobs: ${first.id}, ${second.id}, ${third.id}`);
+  assert.ok(
+    (await request("/state")).jobs.some((j) =>
+      ["queued", "running"].includes(j.status),
+    ),
+    "Expected an active queue during workspace reset",
+  );
+  await request("/replays", "DELETE");
+  assert.equal((await request("/state")).replays.length, 0);
+  for (const replay of imported.imported) await access(replay.path);
+  const nextMap = new FormData();
+  nextMap.append(
+    "files",
+    new Blob([
+      await makeReplay({
+        mapHash: "0123456789abcdef0123456789abcdef",
+        player: "Next map",
+      }),
+    ]),
+    "next-map.osr",
+  );
+  const nextImport = await request("/import", "POST", nextMap);
+  assert.equal(
+    nextImport.imported.length,
+    1,
+    "Active jobs blocked an upload for another map",
+  );
+  assert.equal((await request("/state")).replays[0].player, "Next map");
+  await assert.rejects(request("/import", "POST", form), /одна карта/);
+  await request("/replays", "DELETE");
+  assert.equal((await request("/state")).replays.length, 0);
   const all = await waitUntil(async () => {
     const state = await request("/state");
     const jobs = state.jobs.filter((j) =>

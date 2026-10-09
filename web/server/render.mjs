@@ -1,3 +1,4 @@
+import { createReplayLifecycle } from "./replay-workspace.mjs";
 import { spawn } from "node:child_process";
 import {
   access,
@@ -248,60 +249,8 @@ export function buildArguments(
 
 export function createRenderer(store, dataDir) {
   let active = null;
-  async function removeReplay(id) {
-    const replay = store.get("replay", id);
-    if (!replay) return;
-    const expected = path.join(dataDir, "library", `${id}.osr`);
-    if (
-      !/^[a-f\d]{64}$/i.test(id) ||
-      path.resolve(replay.path) !== path.resolve(expected)
-    )
-      throw new Error("Нельзя удалить файл за пределами временных реплеев");
-    await rm(expected, { force: true });
-    store.remove("replay", id);
-  }
-  async function clearReplays() {
-    if (store.list("job").some((j) => ["queued", "running"].includes(j.status)))
-      throw new Error("Дождитесь завершения заданий перед очисткой");
-    for (const replay of store.list("replay")) await removeReplay(replay.id);
-    for (const job of store.list("job"))
-      store.put("job", {
-        ...job,
-        project: null,
-        config: null,
-        retryable: false,
-      });
-    return { ok: true };
-  }
-  async function collectReplays() {
-    const jobs = store.list("job"),
-      eligible = new Set(
-        jobs
-          .filter((j) => j.status === "completed" && j.action === "record")
-          .flatMap((j) => j.consumedReplayIds ?? []),
-      );
-    const protectedIds = new Set(
-      jobs
-        .filter((j) => ["queued", "running"].includes(j.status))
-        .flatMap((j) => j.project?.replayIds ?? []),
-    );
-    for (const id of eligible)
-      if (!protectedIds.has(id)) await removeReplay(id);
-    for (const old of jobs) {
-      const patch = {};
-      if (old.consumedReplayIds)
-        patch.consumedReplayIds = old.consumedReplayIds.filter((id) =>
-          store.get("replay", id),
-        );
-      if (
-        old.project &&
-        !["queued", "running"].includes(old.status) &&
-        old.project.replayIds.some((id) => !store.get("replay", id))
-      )
-        Object.assign(patch, { project: null, config: null, retryable: false });
-      if (Object.keys(patch).length) store.put("job", { ...old, ...patch });
-    }
-  }
+  const { clearReplays, collectReplays, withReplayLock } =
+    createReplayLifecycle(store, dataDir);
   for (const job of store.list("job"))
     if (["running", "queued"].includes(job.status))
       store.put("job", {
@@ -335,23 +284,31 @@ export function createRenderer(store, dataDir) {
     }
     if (["preview", "record"].includes(action))
       await runCommand(config.ffmpegPath || "ffmpeg", ["-version"]);
-    // Another completed job may have released these copies during the probes.
-    validateProject(project, store);
-    const job = {
-      id: randomUUID(),
-      name: project.name,
-      status: "queued",
-      progress: 0,
-      action,
-      createdAt: new Date().toISOString(),
-      project: structuredClone(project),
-      config: structuredClone(config),
-      log: "",
-      output: null,
-    };
-    store.put("job", job);
-    void pump();
-    return job;
+    return withReplayLock(() => {
+      // Another completed job may have released these copies during the probes.
+      validateProject(project, store);
+      const job = {
+        id: randomUUID(),
+        name: project.name,
+        status: "queued",
+        progress: 0,
+        action,
+        createdAt: new Date().toISOString(),
+        project: structuredClone(project),
+        replayUploads: Object.fromEntries(
+          project.replayIds.map((id) => [
+            id,
+            store.get("replay", id)?.uploadId ?? null,
+          ]),
+        ),
+        config: structuredClone(config),
+        log: "",
+        output: null,
+      };
+      store.put("job", job);
+      void pump();
+      return job;
+    });
   }
   async function pump() {
     if (active) return;
@@ -649,5 +606,11 @@ export function createRenderer(store, dataDir) {
     else throw new Error("Это задание уже завершено");
     return store.get("job", id);
   }
-  return { enqueue, cancel, clearReplays, isActive: () => Boolean(active) };
+  return {
+    enqueue,
+    cancel,
+    clearReplays,
+    withReplayLock,
+    isActive: () => Boolean(active),
+  };
 }

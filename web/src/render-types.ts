@@ -9,6 +9,9 @@ export type Replay = {
   accuracy: number;
   combo: number;
   misses: number;
+  count300: number;
+  count100: number;
+  count50: number;
   modList: string[];
   source: string;
   group: string;

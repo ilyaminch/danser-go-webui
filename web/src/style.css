@@ -492,21 +492,30 @@ details[open] > summary {
 .attempt:not(.selected) {
   opacity: 0.7;
 }
-.attempt details {
+.attempt-stats {
   grid-column: 1/-1;
   margin-left: 27px;
-  font-size: 14px;
-}
-.attempt summary {
-  font-size: 14px;
-  font-weight: 400;
-  padding: 0;
+  font-size: 13px;
   color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
-.attempt p {
-  overflow-wrap: anywhere;
-  font-size: 14px;
+.hit-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 5px;
+}
+.hit-counts b {
+  color: var(--text);
+}
+.date-gradient {
   margin: 8px 0;
+}
+.date-gradient > summary {
+  font-size: 14px;
+}
+.date-gradient .workflow-card {
+  padding: 8px 0;
 }
 .attempt .swatch {
   width: 30px;
@@ -667,11 +676,6 @@ details[open] > summary {
 .tip > svg {
   flex-shrink: 0;
   color: var(--purple);
-}
-.player-colors label {
-  display: flex;
-  justify-content: space-between;
-  margin: 12px 0;
 }
 .launch-disclosure {
   border-top: 1px solid var(--line);
