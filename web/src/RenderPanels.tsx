@@ -462,11 +462,9 @@ export function ExportPanel({
 
 export function LaunchPanel({
   project,
-  patch,
   updateLaunch,
 }: {
   project: Project;
-  patch: (changes: Partial<Project>) => void;
   updateLaunch: Update;
 }) {
   return (

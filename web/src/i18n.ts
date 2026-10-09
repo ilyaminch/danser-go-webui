@@ -1,10 +1,10 @@
+import { readSession, writeSession } from "../shared/session.mjs";
 export type Language = "ru" | "en";
-let language: Language =
-  sessionStorage.getItem("studio-language") === "en" ? "en" : "ru";
+let language: Language = readSession("studio-language") === "en" ? "en" : "ru";
 export const getLanguage = () => language;
 export function setLanguage(value: Language) {
   language = value;
-  sessionStorage.setItem("studio-language", value);
+  writeSession("studio-language", value);
   document.documentElement.lang = value;
 }
 const english: Record<string, string> = {

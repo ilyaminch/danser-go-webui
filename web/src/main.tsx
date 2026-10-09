@@ -21,6 +21,11 @@ import {
   X,
 } from "lucide-react";
 import { assignColors } from "../shared/palette.mjs";
+import {
+  restoreRenderSettings,
+  readSession,
+  writeSession,
+} from "../shared/session.mjs";
 import "./style.css";
 import { VinylStage } from "./VinylStage";
 import { t, getLanguage, setLanguage, type Language } from "./i18n";
@@ -180,40 +185,11 @@ function App() {
     [page, setPage] = useState("library"),
     [project, setProject] = useState<Project>(() => {
       try {
-        const saved = sessionStorage.getItem("studio-render-settings");
-        return saved
-          ? {
-              ...freshProject(),
-              ...JSON.parse(saved),
-              kind: !["dance", "autoplay"].includes(JSON.parse(saved).kind)
-                ? "comparison"
-                : JSON.parse(saved).kind,
-              visualization:
-                JSON.parse(saved).visualization ??
-                (JSON.parse(saved).kind === "autoplay" ? "autoplay" : "dance"),
-              launch: {
-                ...JSON.parse(saved).launch,
-                ...(!["dance", "autoplay"].includes(JSON.parse(saved).kind)
-                  ? { mods: "", mods2: "" }
-                  : {}),
-              },
-              ...(sessionStorage.getItem("studio-recording-defaults") !==
-              "nvenc-p4-v1"
-                ? {
-                    export: { ...freshProject().export },
-                    configPatch: {
-                      ...JSON.parse(saved).configPatch,
-                      Recording: {
-                        ...JSON.parse(saved).configPatch?.Recording,
-                        ...freshProject().configPatch.Recording,
-                      },
-                    },
-                  }
-                : {}),
-              replayIds: [],
-              mapHash: "",
-            }
-          : freshProject();
+        return restoreRenderSettings(
+          freshProject(),
+          readSession("studio-render-settings"),
+          readSession("studio-recording-defaults") === "nvenc-p4-v1",
+        );
       } catch {
         return freshProject();
       }
@@ -234,8 +210,8 @@ function App() {
     [skins, setSkins] = useState<{ id: string; label: string }[]>([]);
   useEffect(() => {
     const { id, replayIds, mapHash, ...settings } = project;
-    sessionStorage.setItem("studio-render-settings", JSON.stringify(settings));
-    sessionStorage.setItem("studio-recording-defaults", "nvenc-p4-v1");
+    writeSession("studio-render-settings", JSON.stringify(settings));
+    writeSession("studio-recording-defaults", "nvenc-p4-v1");
   }, [project]);
   const fileRef = useRef<HTMLInputElement>(null),
     mapRef = useRef<HTMLInputElement>(null),
@@ -256,18 +232,23 @@ function App() {
     );
   }, [state.jobs]);
   const loadSkins = async () => setSkins(await api("/skins"));
+  const refreshSequence = useRef(0);
   const refresh = async () => {
+    const sequence = ++refreshSequence.current;
     const s = await api("/state");
+    if (sequence !== refreshSequence.current) return s;
     setState(s);
     setProject((p) => {
       const ids = p.replayIds.filter((id) =>
         s.replays.some((r: Replay) => r.id === id),
       );
+      const mapHash =
+        p.kind === "comparison" ? (ids.length ? p.mapHash : "") : p.mapHash;
+      if (ids.length === p.replayIds.length && mapHash === p.mapHash) return p;
       return {
         ...p,
         replayIds: ids,
-        mapHash:
-          p.kind === "comparison" ? (ids.length ? p.mapHash : "") : p.mapHash,
+        mapHash,
       };
     });
     return s;
@@ -327,7 +308,6 @@ function App() {
   const updateExport = (key: string, value: any) =>
     setProject((p) => ({ ...p, export: { ...p.export, [key]: value } }));
   const usesReplays = project.kind === "comparison";
-  const multiReplay = usesReplays;
   const scenarioChange = (kind: string) => {
     setProject((p) => ({
       ...p,
@@ -1324,7 +1304,6 @@ function App() {
                     <summary>{t("Параметры прохождения")}</summary>
                     <LaunchPanel
                       project={project}
-                      patch={patch}
                       updateLaunch={updateLaunch}
                     />
                   </details>
@@ -1571,7 +1550,7 @@ function App() {
                       s.key !== "Input" &&
                       (s.key !== "CursorDance" ||
                         ["dance", "autoplay"].includes(project.kind)) &&
-                      (s.key !== "Knockout" || multiReplay),
+                      (s.key !== "Knockout" || usesReplays),
                   )
                   .map((s) => (
                     <button
