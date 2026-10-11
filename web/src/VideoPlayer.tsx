@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Maximize, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { t } from "./i18n";
 
@@ -15,6 +15,24 @@ export function VideoPlayer({ src }: { src: string }) {
   const [error, setError] = useState(false);
   const [playBlocked, setPlayBlocked] = useState(false);
   const [waiting, setWaiting] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [fullscreenError, setFullscreenError] = useState(false);
+  useEffect(() => {
+    const changed = () =>
+      setFullscreen(document.fullscreenElement === host.current);
+    document.addEventListener("fullscreenchange", changed);
+    return () => document.removeEventListener("fullscreenchange", changed);
+  }, []);
+  const toggleFullscreen = async () => {
+    setFullscreenError(false);
+    try {
+      if (document.fullscreenElement === host.current)
+        await document.exitFullscreen();
+      else await host.current?.requestFullscreen();
+    } catch {
+      setFullscreenError(true);
+    }
+  };
   const toggle = async () => {
     if (!video.current) return;
     if (video.current.paused) {
@@ -146,15 +164,22 @@ export function VideoPlayer({ src }: { src: string }) {
         />
         <button
           className="icon-btn"
-          aria-label={t("Полный экран")}
-          onClick={() => {
-            if (document.fullscreenElement) void document.exitFullscreen();
-            else void host.current?.requestFullscreen().catch(() => {});
-          }}
+          aria-label={
+            fullscreen ? t("Выйти из полного экрана") : t("Полный экран")
+          }
+          aria-pressed={fullscreen}
+          onClick={() => void toggleFullscreen()}
         >
           <Maximize size={20} />
         </button>
       </div>
+      {fullscreenError && (
+        <p className="fullscreen-error" role="status">
+          {t(
+            "Браузер не разрешил полный экран. Видео можно смотреть в этом окне.",
+          )}
+        </p>
+      )}
     </div>
   );
 }

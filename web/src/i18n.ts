@@ -8,6 +8,9 @@ export function setLanguage(value: Language) {
   document.documentElement.lang = value;
 }
 const english: Record<string, string> = {
+  "Выйти из полного экрана": "Exit fullscreen",
+  "Браузер не разрешил полный экран. Видео можно смотреть в этом окне.":
+    "Your browser did not allow fullscreen. You can watch the video in this window.",
   "Выбрать карту": "Choose a beatmap",
   "Карты не найдены": "No beatmaps found",
   "Показаны первые 100 карт. Уточните поиск.":

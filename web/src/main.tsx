@@ -183,6 +183,8 @@ const fmtDate = (date: string | null) =>
 const num = (n: number) =>
   new Intl.NumberFormat(getLanguage() === "ru" ? "ru-RU" : "en-GB").format(n);
 function App() {
+  const motionRoot = useRef<HTMLDivElement>(null);
+  const previousView = useRef("");
   const [timelineHost, setTimelineHost] = useState<HTMLDivElement | null>(null);
   const [language, changeLanguage] = useState<Language>(getLanguage);
   const [sceneTab, setSceneTab] = useState("rules");
@@ -225,6 +227,41 @@ function App() {
     skinRef = useRef<HTMLInputElement>(null),
     configRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
+    const next = `${project.kind}:${sceneTab}`;
+    const previous = previousView.current;
+    previousView.current = next;
+    if (!previous || previous === next) return;
+    const changedScenario = previous.split(":")[0] !== project.kind;
+    const targets = motionRoot.current?.querySelectorAll(
+      changedScenario
+        ? ".source-rail .map-summary, .source-rail .replay-drop, .scene-rail .workflow-card"
+        : ".scene-rail .workflow-card",
+    );
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const animations = [...(targets ?? [])].map((target) =>
+      target.animate(
+        reduced
+          ? [{ opacity: 0.8 }, { opacity: 1 }]
+          : [
+              {
+                opacity: 0.65,
+                transform: `translateX(${project.kind === "comparison" ? -12 : 12}px)`,
+                clipPath: "inset(0 3% 0 0)",
+              },
+              {
+                opacity: 1,
+                transform: "translateX(0)",
+                clipPath: "inset(0 0 0 0)",
+              },
+            ],
+        { duration: reduced ? 100 : 240, easing: "cubic-bezier(.16,1,.3,1)" },
+      ),
+    );
+    return () => animations.forEach((animation) => animation.cancel());
+  }, [project.kind, sceneTab]);
+  useEffect(() => {
     if (selectedJob && jobDialog.current && !jobDialog.current.open)
       jobDialog.current.showModal();
   }, [selectedJob]);
@@ -240,11 +277,15 @@ function App() {
   }, [state.jobs]);
   const loadSkins = async () => setSkins(await api("/skins"));
   const refreshSequence = useRef(0);
-  const refresh = async () => {
+  const lastPoll = useRef("");
+  const refresh = async (catalog = true) => {
     const sequence = ++refreshSequence.current;
-    const s = await api("/state");
+    const s = await api(`/state?compact=1${catalog ? "&catalog=1" : ""}`);
     if (sequence !== refreshSequence.current) return s;
-    setState(s);
+    const signature = JSON.stringify(s);
+    if (!catalog && signature === lastPoll.current) return s;
+    lastPoll.current = catalog ? "" : signature;
+    setState((previous) => ({ ...previous, ...s }));
     setProject((p) => {
       const ids = p.replayIds.filter((id) =>
         s.replays.some((r: Replay) => r.id === id),
@@ -286,7 +327,9 @@ function App() {
     api("/health")
       .then(setHealth)
       .catch(() => {});
-    const timer = setInterval(() => refresh().catch(() => {}), 2500);
+    const timer = setInterval(() => {
+      if (!document.hidden) void refresh(false).catch(() => {});
+    }, 2500);
     return () => clearInterval(timer);
   }, []);
   useEffect(() => {
@@ -611,7 +654,7 @@ function App() {
     health?.engine && !!map && (project.kind !== "comparison" || health.studio);
   const paletteCss = `linear-gradient(90deg,${(project.palette.reverse ? [...project.palette.stops].reverse() : project.palette.stops).join(",")})`;
   return (
-    <div className={`studio-app workspace-${page}`}>
+    <div ref={motionRoot} className={`studio-app workspace-${page}`}>
       <header className="studio-header">
         <a
           className="studio-brand"
@@ -705,7 +748,10 @@ function App() {
           {page === "library" && (
             <>
               <h2>{t("Источник")}</h2>
-              <div className="scenario-tabs">
+              <div
+                className="scenario-tabs"
+                data-scenario={usesReplays ? "replays" : "map"}
+              >
                 <button
                   aria-pressed={usesReplays}
                   onClick={() => scenarioChange("comparison")}

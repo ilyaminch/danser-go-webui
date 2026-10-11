@@ -31,6 +31,12 @@ export function MapPicker({
       .includes(query.trim().toLocaleLowerCase()),
   );
   const results = filtered.slice(0, 100);
+  if (
+    selected &&
+    filtered.some((m) => m.hash === value) &&
+    !results.some((m) => m.hash === value)
+  )
+    results.splice(99, 1, selected);
   useEffect(() => {
     if (open) search.current?.focus();
     const close = () => panel.current?.hidePopover();
@@ -41,7 +47,7 @@ export function MapPicker({
     panel.current
       ?.querySelector(`[data-index="${active}"]`)
       ?.scrollIntoView({ block: "nearest" });
-  }, [active, query]);
+  }, [active, query, open]);
   const choose = (hash: string) => {
     onChange(hash);
     panel.current?.hidePopover();
@@ -53,7 +59,11 @@ export function MapPicker({
         type="button"
         className="map-picker-trigger"
         popoverTarget={id}
-        aria-label={t("Выбрать карту")}
+        aria-label={
+          selected
+            ? `${t("Выбрать карту")}: ${selected.artist} — ${selected.title} [${selected.difficulty}]`
+            : t("Выбрать карту")
+        }
         aria-expanded={open}
         aria-controls={id}
         onClick={(e) => {
@@ -72,8 +82,12 @@ export function MapPicker({
             width: Math.min(520, window.innerWidth - 16),
             maxHeight: height,
           });
-          setQuery("");
-          setActive(0);
+          setActive(
+            Math.max(
+              0,
+              results.findIndex((m) => m.hash === value),
+            ),
+          );
         }}
       >
         <span>

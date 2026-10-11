@@ -76,8 +76,16 @@ const asyncRoute = (fn) => (req, res, next) =>
 app.get("/api/state", (req, res) =>
   res.json({
     replays: workspaceReplays(store),
-    maps: store.list("map"),
-    jobs: store.list("job").map(({ config, project, ...job }) => job),
+    ...(!req.query.compact || req.query.catalog
+      ? { maps: store.list("map") }
+      : {}),
+    jobs: store.list("job").map(({ config, project, ...job }) => {
+      if (req.query.compact) {
+        const { log, ...summary } = job;
+        return summary;
+      }
+      return job;
+    }),
     config: store.get("config", "local"),
   }),
 );
