@@ -40,6 +40,8 @@ import {
 } from "./RenderPanels";
 import { CredentialsPanel } from "./CredentialsPanel";
 import { LazerConnection } from "./LazerConnection";
+import { MapPicker } from "./MapPicker";
+import { VideoPlayer } from "./VideoPlayer";
 
 type Job = {
   id: string;
@@ -185,7 +187,6 @@ function App() {
   const [language, changeLanguage] = useState<Language>(getLanguage);
   const [sceneTab, setSceneTab] = useState("rules");
   const [showExport, setShowExport] = useState(false);
-  const [mapSearch, setMapSearch] = useState("");
   const jobDialog = useRef<HTMLDialogElement>(null);
   const [state, setState] = useState<State>(emptyState),
     [page, setPage] = useState("library"),
@@ -977,34 +978,11 @@ function App() {
                   {usesReplays ? t("Карта из реплея") : t("Карта для видео")}
                 </h2>
                 {!usesReplays && (
-                  <FieldLabel label={t("Карта и сложность")}>
-                    <input
-                      aria-label={t("Поиск карт")}
-                      placeholder={t("Название, исполнитель или сложность")}
-                      value={mapSearch}
-                      onChange={(e) => setMapSearch(e.target.value)}
-                    />
-                    <select
-                      aria-label={t("Карта и сложность")}
-                      value={project.mapHash}
-                      onChange={(e) => patch({ mapHash: e.target.value })}
-                    >
-                      <option value="">{t("Выберите карту")}</option>
-                      {state.maps
-                        .filter(
-                          (m) =>
-                            m.hash === project.mapHash ||
-                            `${m.title} ${m.artist} ${m.difficulty}`
-                              .toLowerCase()
-                              .includes(mapSearch.toLowerCase()),
-                        )
-                        .map((m) => (
-                          <option key={m.hash} value={m.hash}>
-                            {m.artist} — {m.title} [{m.difficulty}]
-                          </option>
-                        ))}
-                    </select>
-                  </FieldLabel>
+                  <MapPicker
+                    maps={state.maps}
+                    value={project.mapHash}
+                    onChange={(mapHash) => patch({ mapHash })}
+                  />
                 )}
                 <p>
                   {map
@@ -1138,12 +1116,12 @@ function App() {
                         )}
                         {j.error && <p className="warning">{j.error}</p>}
                         <div className="job-actions">
-                          <button
+                          <a
                             className="text-button"
-                            onClick={() => setSelectedJob(j)}
+                            href={`/api/jobs/${j.id}/log`}
                           >
-                            {t("Журнал")}
-                          </button>
+                            {t("Скачать журнал")}
+                          </a>
                           {["queued", "running"].includes(j.status) ? (
                             <button
                               className="text-button danger"
@@ -1360,7 +1338,11 @@ function App() {
             </>
           )}
         </div>
-        <VinylStage map={map} timelineHost={timelineHost} />
+        <VinylStage
+          map={map}
+          timelineHost={timelineHost}
+          suspended={!!selectedJob}
+        />
         <aside className="scene-rail" key={`scene-${page}`}>
           {page === "library" ? (
             <>
@@ -1770,7 +1752,7 @@ function App() {
       {selectedJob && (
         <dialog
           ref={jobDialog}
-          className="modal"
+          className="modal result-modal"
           aria-labelledby="job-dialog-title"
           onCancel={() => setSelectedJob(null)}
           onClick={(e) => {
@@ -1782,7 +1764,7 @@ function App() {
             <button
               autoFocus
               className="icon-btn"
-              aria-label={t("Закрыть журнал")}
+              aria-label={t("Закрыть просмотр")}
               onClick={() => setSelectedJob(null)}
             >
               <X size={20} />
@@ -1797,13 +1779,23 @@ function App() {
                 src={`/api/jobs/${selectedJob.id}/output`}
               />
             ) : (
-              <video controls src={`/api/jobs/${selectedJob.id}/output`} />
+              <VideoPlayer
+                key={selectedJob.id}
+                src={`/api/jobs/${selectedJob.id}/output`}
+              />
             ))}
-          <h3>{t("Журнал задания")}</h3>
-          <pre>
-            {state.jobs.find((j) => j.id === selectedJob.id)?.log ||
-              t("Задание ещё не запущено")}
-          </pre>
+          <div className="result-actions">
+            <a
+              className="button primary"
+              href={`/api/jobs/${selectedJob.id}/output?download=1`}
+            >
+              <ArrowDownToLine size={17} />
+              {t("Сохранить файл")}
+            </a>
+            <a className="text-button" href={`/api/jobs/${selectedJob.id}/log`}>
+              {t("Скачать журнал")}
+            </a>
+          </div>
         </dialog>
       )}
       <div className="studio-credit">

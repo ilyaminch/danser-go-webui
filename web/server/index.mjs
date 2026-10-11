@@ -410,6 +410,15 @@ app.post(
     res.json(await renderer.enqueue(job.project, job.action));
   }),
 );
+app.get("/api/jobs/:id/log", (req, res) => {
+  const job = store.get("job", req.params.id);
+  if (!job) return res.status(404).json({ error: "Job not found" });
+  res
+    .attachment(`danser-${job.id}.log`)
+    .type("text/plain")
+    .send(job.log || "");
+});
+
 app.get("/api/jobs/:id/output", (req, res, next) => {
   const job = store.get("job", req.params.id);
   if (

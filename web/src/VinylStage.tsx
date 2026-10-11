@@ -9,11 +9,18 @@ import { storedVolume, readSession, writeSession } from "../shared/session.mjs";
 export function VinylStage({
   map,
   timelineHost,
+  suspended = false,
 }: {
   map?: MapInfo;
   timelineHost: HTMLDivElement | null;
+  suspended?: boolean;
 }) {
   const audio = useRef<HTMLAudioElement>(null);
+  const suspendedRef = useRef(suspended);
+  useEffect(() => {
+    suspendedRef.current = suspended;
+    if (suspended) audio.current?.pause();
+  }, [suspended]);
   const [media, setMedia] = useState<{
     background: string | null;
     audio: string | null;
@@ -65,7 +72,7 @@ export function VinylStage({
     if (!media.audio || !player) return;
     let active = true;
     const start = () => {
-      if (!active) return;
+      if (!active || suspendedRef.current) return;
       player.currentTime = previewStart(
         media.previewTime,
         player.duration,

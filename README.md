@@ -40,6 +40,8 @@ Under **Create**, import replays or choose **Map** and a visualization mode. Set
 
 The date gradient uses the entire loaded batch, so selecting attempts does not change their colors. Turning it off freezes the current colors; manual overrides remain in effect. Gradient editing opens beside the attempt list. Each attempt shows its timestamp and hit counts.
 
+Map selection opens a searchable list with keyboard navigation. Completed videos open in a dedicated player with seeking, volume and fullscreen controls. Render logs remain available as downloads from the queue and result viewer.
+
 Replay videos retain recorded mods. CS/AR/OD/HP overrides apply only to map visualization. Default recording uses NVENC; select libx264 if hardware encoding is unavailable.
 
 ## Development
