@@ -1,7 +1,7 @@
 param(
     [string]$EngineDirectory = (Join-Path $PSScriptRoot '.local-work/release-runtime'),
     [string]$OutputDirectory = (Join-Path $PSScriptRoot '.local-work/packages'),
-    [string]$Version = '0.4.0'
+    [string]$Version = '0.4.1'
 )
 $ErrorActionPreference = 'Stop'
 $taskRoot = $PSScriptRoot
