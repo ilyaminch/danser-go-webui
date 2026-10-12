@@ -7,7 +7,7 @@ import { zip } from "./archive-fixture.mjs";
 import { runCommand } from "../server/render.mjs";
 import { assignColors, setGradientEnabled } from "../shared/palette.mjs";
 
-const root = path.resolve(".."),
+const root = path.resolve(process.env.STUDIO_TEST_ROOT || ".."),
   testDir = path.resolve("data/integration", String(Date.now())),
   port = 3105;
 const testFFmpeg = process.env.STUDIO_TEST_FFMPEG || "ffmpeg";
@@ -68,7 +68,9 @@ try {
   });
   assert.equal(rejected.status, 403);
   await request("/config", "PUT", {
-    enginePath: path.join(root, "runtime/danser-studio.exe"),
+    enginePath:
+      process.env.STUDIO_TEST_ENGINE ||
+      path.join(root, "runtime/danser-studio.exe"),
     songsDir: manual ? "" : fixture.songs,
     ffmpegPath: testFFmpeg,
     outputDir: path.join(testDir, "videos"),

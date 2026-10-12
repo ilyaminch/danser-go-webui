@@ -183,6 +183,9 @@ const fmtDate = (date: string | null) =>
 const num = (n: number) =>
   new Intl.NumberFormat(getLanguage() === "ru" ? "ru-RU" : "en-GB").format(n);
 function App() {
+  const hadSavedSettings = useRef(
+    Boolean(readSession("studio-render-settings")),
+  );
   const motionRoot = useRef<HTMLDivElement>(null);
   const previousView = useRef("");
   const [timelineHost, setTimelineHost] = useState<HTMLDivElement | null>(null);
@@ -325,7 +328,18 @@ function App() {
       }),
     );
     api("/health")
-      .then(setHealth)
+      .then((info) => {
+        setHealth(info);
+        if (!hadSavedSettings.current && info.recommendedEncoder === "libx264")
+          setProject((current) =>
+            current.export.encoder === "h264_nvenc"
+              ? {
+                  ...current,
+                  export: { ...current.export, encoder: "libx264" },
+                }
+              : current,
+          );
+      })
       .catch(() => {});
     const timer = setInterval(() => {
       if (!document.hidden) void refresh(false).catch(() => {});

@@ -14,8 +14,23 @@ import { loadSchema } from "./schema.mjs";
 import { createRenderer, validateProject, runCommand } from "./render.mjs";
 import { importMapArchive, importSkin, listSkins } from "./assets.mjs";
 import { parseMedia, resolveMedia } from "./media.mjs";
+import {
+  IMPORT_BYTES,
+  IMPORT_FILES,
+  MAP_BYTES,
+  REPLAY_BYTES,
+  readLimitedFile,
+  limitError,
+} from "./limits.mjs";
+import {
+  frameProtection,
+  boundedMemoryStorage,
+  createImportGate,
+} from "./import-security.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const { version } = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
+const bundledFFmpeg = path.resolve(root, "../runtime/ffmpeg/ffmpeg.exe");
 const dataDir = process.env.STUDIO_DATA_DIR || path.join(root, "data");
 const port = Number(process.env.PORT || 3000);
 const store = openStore(dataDir),
@@ -30,7 +45,7 @@ if (!store.get("config", "local"))
     skinsDir: "",
     replaysDir: "",
     outputDir: path.join(dataDir, "videos"),
-    ffmpegPath: "ffmpeg",
+    ffmpegPath: existsSync(bundledFFmpeg) ? bundledFFmpeg : "ffmpeg",
   });
 const bundledEngine = path.resolve(root, "../runtime/danser-studio.exe");
 const localConfig = store.get("config", "local");
@@ -41,6 +56,7 @@ if (!localConfig.bundledEngineInitialized && existsSync(bundledEngine))
     bundledEngineInitialized: true,
   });
 app.disable("x-powered-by");
+app.use(frameProtection);
 app.use((req, res, next) => {
   const expected = `http://127.0.0.1:${port}`,
     host = req.get("host"),
@@ -61,20 +77,30 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: "5mb" }));
 app.use((req, res, next) => {
-  if (Number(req.get("content-length")) > 256 * 1024 * 1024)
+  if (Number(req.get("content-length")) > IMPORT_BYTES + 1024 * 1024)
     return res
       .status(413)
       .json({ error: "Импортируйте не более 256 МБ за один раз" });
   next();
 });
 const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024, files: 200 },
+  storage: boundedMemoryStorage(),
+  limits: {
+    fileSize: REPLAY_BYTES,
+    files: IMPORT_FILES,
+    fields: 0,
+    parts: IMPORT_FILES,
+    headerPairs: 50,
+  },
 });
+const importGate = createImportGate();
 const asyncRoute = (fn) => (req, res, next) =>
-  Promise.resolve(fn(req, res)).catch(next);
+  Promise.resolve(fn(req, res))
+    .catch(next)
+    .finally(() => req.releaseImport?.());
 app.get("/api/state", (req, res) =>
   res.json({
+    version,
     replays: workspaceReplays(store),
     ...(!req.query.compact || req.query.catalog
       ? { maps: store.list("map") }
@@ -100,8 +126,8 @@ app.get(
       ),
     );
     const base = `/api/maps/${map.hash}/media/`;
-    const { previewTime } = await readFile(map.path, "utf8")
-      .then(parseMedia)
+    const { previewTime } = await readLimitedFile(map.path, MAP_BYTES)
+      .then((buffer) => parseMedia(buffer.toString("utf8")))
       .catch(() => ({ previewTime: -1 }));
     res.json({
       background: background ? base + "background" : null,
@@ -174,6 +200,27 @@ app.get(
     try {
       await runCommand(config.ffmpegPath || "ffmpeg", ["-version"]);
       result.ffmpeg = true;
+      try {
+        await runCommand(config.ffmpegPath || "ffmpeg", [
+          "-nostdin",
+          "-v",
+          "error",
+          "-f",
+          "lavfi",
+          "-i",
+          "color=s=128x128:r=1",
+          "-frames:v",
+          "1",
+          "-c:v",
+          "h264_nvenc",
+          "-f",
+          "null",
+          "-",
+        ]);
+        result.recommendedEncoder = "h264_nvenc";
+      } catch {
+        result.recommendedEncoder = "libx264";
+      }
     } catch (e) {
       result.ffmpegError = e.message;
     }
@@ -274,6 +321,7 @@ async function importFilesUnlocked(files) {
 }
 app.post(
   "/api/import",
+  importGate,
   upload.array("files"),
   asyncRoute(async (req, res) =>
     res.json(
@@ -288,21 +336,26 @@ app.post(
 );
 app.post(
   "/api/import-folder",
+  importGate,
   asyncRoute(async (req, res) => {
     const dir = String(req.body.path ?? "");
     if (!path.isAbsolute(dir))
       throw new Error("Укажите абсолютный путь к папке");
     const files = [];
+    let total = 0;
     async function walk(current, depth = 0) {
       if (depth > 5) return;
       for (const entry of await readdir(current, { withFileTypes: true })) {
         const target = path.join(current, entry.name);
         if (entry.isDirectory()) await walk(target, depth + 1);
-        else if (entry.name.toLowerCase().endsWith(".osr")) {
-          if (files.length >= 1000)
-            throw new Error("Импортируйте не более 1000 реплеев за один раз");
-          const buffer = await readFile(target);
-          if (buffer.length > 20 * 1024 * 1024) continue;
+        else if (entry.isFile() && entry.name.toLowerCase().endsWith(".osr")) {
+          if (files.length >= IMPORT_FILES)
+            throw limitError("Импортируйте не более 200 реплеев за один раз");
+          const buffer = await readLimitedFile(
+            target,
+            Math.min(REPLAY_BYTES, IMPORT_BYTES - total),
+          );
+          total += buffer.length;
           files.push({ name: entry.name, buffer });
         }
       }
@@ -319,6 +372,7 @@ app.patch("/api/replays/:id", (req, res, next) => {
 });
 app.post(
   "/api/maps/scan",
+  importGate,
   asyncRoute(async (req, res) => {
     const config = store.get("config", "local");
     if (!config.songsDir && !config.lazerDir)
@@ -347,16 +401,24 @@ app.get(
 );
 app.post(
   "/api/maps/resolve",
+  importGate,
   asyncRoute(async (req, res) =>
     res.json(await resolveMap(store, String(req.body.hash ?? ""))),
   ),
 );
 const assetsUpload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 256 * 1024 * 1024, files: 1 },
+  storage: boundedMemoryStorage(),
+  limits: {
+    fileSize: IMPORT_BYTES,
+    files: 1,
+    fields: 0,
+    parts: 1,
+    headerPairs: 50,
+  },
 });
 app.post(
   "/api/maps/import",
+  importGate,
   assetsUpload.single("file"),
   asyncRoute(async (req, res) => {
     if (!req.file) throw new Error("Выберите .osz");
@@ -372,10 +434,12 @@ app.post(
 );
 app.get(
   "/api/skins",
+  importGate,
   asyncRoute(async (req, res) => res.json(await listSkins(store, dataDir))),
 );
 app.post(
   "/api/skins/import",
+  importGate,
   assetsUpload.single("file"),
   asyncRoute(async (req, res) => {
     if (!req.file) throw new Error("Выберите .osk");
@@ -507,9 +571,14 @@ app.put(
   }),
 );
 app.use((error, req, res, next) => {
+  req.releaseImport?.();
   console.error(error.message);
   if (!res.headersSent)
-    res.status(400).json({ error: error.message || "Ошибка запроса" });
+    res
+      .status(
+        error.status === 413 || error.code?.startsWith("LIMIT_") ? 413 : 400,
+      )
+      .json({ error: error.message || "Ошибка запроса" });
 });
 if (process.argv.includes("--dev")) {
   const { createServer } = await import("vite");

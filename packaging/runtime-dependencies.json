@@ -1,0 +1,14 @@
+{
+  "upstream": {
+    "url": "https://github.com/Wieku/danser-go/releases/download/0.12.0/danser-0.12.0-win.zip",
+    "sha256": "4f7a832a24517dc0355c925755488b84c6199d248c4bc13ca000f86bb2153f75"
+  },
+  "ffmpeg": {
+    "url": "https://github.com/GyanD/codexffmpeg/releases/download/9.0.2/ffmpeg-9.0.2-essentials_build.zip",
+    "sha256": "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba"
+  },
+  "node": {
+    "url": "https://nodejs.org/dist/v24.18.0/node-v24.18.0-win-x64.zip",
+    "sha256": "0ae68406b42d7725661da979b1403ec9926da205c6770827f33aac9d8f26e821"
+  }
+}
