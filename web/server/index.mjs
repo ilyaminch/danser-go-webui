@@ -76,8 +76,16 @@ const asyncRoute = (fn) => (req, res, next) =>
 app.get("/api/state", (req, res) =>
   res.json({
     replays: workspaceReplays(store),
-    maps: store.list("map"),
-    jobs: store.list("job").map(({ config, project, ...job }) => job),
+    ...(!req.query.compact || req.query.catalog
+      ? { maps: store.list("map") }
+      : {}),
+    jobs: store.list("job").map(({ config, project, ...job }) => {
+      if (req.query.compact) {
+        const { log, ...summary } = job;
+        return summary;
+      }
+      return job;
+    }),
     config: store.get("config", "local"),
   }),
 );
@@ -410,6 +418,15 @@ app.post(
     res.json(await renderer.enqueue(job.project, job.action));
   }),
 );
+app.get("/api/jobs/:id/log", (req, res) => {
+  const job = store.get("job", req.params.id);
+  if (!job) return res.status(404).json({ error: "Job not found" });
+  res
+    .attachment(`danser-${job.id}.log`)
+    .type("text/plain")
+    .send(job.log || "");
+});
+
 app.get("/api/jobs/:id/output", (req, res, next) => {
   const job = store.get("job", req.params.id);
   if (

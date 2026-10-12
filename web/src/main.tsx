@@ -40,6 +40,8 @@ import {
 } from "./RenderPanels";
 import { CredentialsPanel } from "./CredentialsPanel";
 import { LazerConnection } from "./LazerConnection";
+import { MapPicker } from "./MapPicker";
+import { VideoPlayer } from "./VideoPlayer";
 
 type Job = {
   id: string;
@@ -181,11 +183,12 @@ const fmtDate = (date: string | null) =>
 const num = (n: number) =>
   new Intl.NumberFormat(getLanguage() === "ru" ? "ru-RU" : "en-GB").format(n);
 function App() {
+  const motionRoot = useRef<HTMLDivElement>(null);
+  const previousView = useRef("");
   const [timelineHost, setTimelineHost] = useState<HTMLDivElement | null>(null);
   const [language, changeLanguage] = useState<Language>(getLanguage);
   const [sceneTab, setSceneTab] = useState("rules");
   const [showExport, setShowExport] = useState(false);
-  const [mapSearch, setMapSearch] = useState("");
   const jobDialog = useRef<HTMLDialogElement>(null);
   const [state, setState] = useState<State>(emptyState),
     [page, setPage] = useState("library"),
@@ -224,6 +227,41 @@ function App() {
     skinRef = useRef<HTMLInputElement>(null),
     configRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
+    const next = `${project.kind}:${sceneTab}`;
+    const previous = previousView.current;
+    previousView.current = next;
+    if (!previous || previous === next) return;
+    const changedScenario = previous.split(":")[0] !== project.kind;
+    const targets = motionRoot.current?.querySelectorAll(
+      changedScenario
+        ? ".source-rail .map-summary, .source-rail .replay-drop, .scene-rail .workflow-card"
+        : ".scene-rail .workflow-card",
+    );
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const animations = [...(targets ?? [])].map((target) =>
+      target.animate(
+        reduced
+          ? [{ opacity: 0.8 }, { opacity: 1 }]
+          : [
+              {
+                opacity: 0.65,
+                transform: `translateX(${project.kind === "comparison" ? -12 : 12}px)`,
+                clipPath: "inset(0 3% 0 0)",
+              },
+              {
+                opacity: 1,
+                transform: "translateX(0)",
+                clipPath: "inset(0 0 0 0)",
+              },
+            ],
+        { duration: reduced ? 100 : 240, easing: "cubic-bezier(.16,1,.3,1)" },
+      ),
+    );
+    return () => animations.forEach((animation) => animation.cancel());
+  }, [project.kind, sceneTab]);
+  useEffect(() => {
     if (selectedJob && jobDialog.current && !jobDialog.current.open)
       jobDialog.current.showModal();
   }, [selectedJob]);
@@ -239,11 +277,15 @@ function App() {
   }, [state.jobs]);
   const loadSkins = async () => setSkins(await api("/skins"));
   const refreshSequence = useRef(0);
-  const refresh = async () => {
+  const lastPoll = useRef("");
+  const refresh = async (catalog = true) => {
     const sequence = ++refreshSequence.current;
-    const s = await api("/state");
+    const s = await api(`/state?compact=1${catalog ? "&catalog=1" : ""}`);
     if (sequence !== refreshSequence.current) return s;
-    setState(s);
+    const signature = JSON.stringify(s);
+    if (!catalog && signature === lastPoll.current) return s;
+    lastPoll.current = catalog ? "" : signature;
+    setState((previous) => ({ ...previous, ...s }));
     setProject((p) => {
       const ids = p.replayIds.filter((id) =>
         s.replays.some((r: Replay) => r.id === id),
@@ -285,7 +327,9 @@ function App() {
     api("/health")
       .then(setHealth)
       .catch(() => {});
-    const timer = setInterval(() => refresh().catch(() => {}), 2500);
+    const timer = setInterval(() => {
+      if (!document.hidden) void refresh(false).catch(() => {});
+    }, 2500);
     return () => clearInterval(timer);
   }, []);
   useEffect(() => {
@@ -610,7 +654,7 @@ function App() {
     health?.engine && !!map && (project.kind !== "comparison" || health.studio);
   const paletteCss = `linear-gradient(90deg,${(project.palette.reverse ? [...project.palette.stops].reverse() : project.palette.stops).join(",")})`;
   return (
-    <div className={`studio-app workspace-${page}`}>
+    <div ref={motionRoot} className={`studio-app workspace-${page}`}>
       <header className="studio-header">
         <a
           className="studio-brand"
@@ -704,7 +748,10 @@ function App() {
           {page === "library" && (
             <>
               <h2>{t("Источник")}</h2>
-              <div className="scenario-tabs">
+              <div
+                className="scenario-tabs"
+                data-scenario={usesReplays ? "replays" : "map"}
+              >
                 <button
                   aria-pressed={usesReplays}
                   onClick={() => scenarioChange("comparison")}
@@ -977,34 +1024,11 @@ function App() {
                   {usesReplays ? t("Карта из реплея") : t("Карта для видео")}
                 </h2>
                 {!usesReplays && (
-                  <FieldLabel label={t("Карта и сложность")}>
-                    <input
-                      aria-label={t("Поиск карт")}
-                      placeholder={t("Название, исполнитель или сложность")}
-                      value={mapSearch}
-                      onChange={(e) => setMapSearch(e.target.value)}
-                    />
-                    <select
-                      aria-label={t("Карта и сложность")}
-                      value={project.mapHash}
-                      onChange={(e) => patch({ mapHash: e.target.value })}
-                    >
-                      <option value="">{t("Выберите карту")}</option>
-                      {state.maps
-                        .filter(
-                          (m) =>
-                            m.hash === project.mapHash ||
-                            `${m.title} ${m.artist} ${m.difficulty}`
-                              .toLowerCase()
-                              .includes(mapSearch.toLowerCase()),
-                        )
-                        .map((m) => (
-                          <option key={m.hash} value={m.hash}>
-                            {m.artist} — {m.title} [{m.difficulty}]
-                          </option>
-                        ))}
-                    </select>
-                  </FieldLabel>
+                  <MapPicker
+                    maps={state.maps}
+                    value={project.mapHash}
+                    onChange={(mapHash) => patch({ mapHash })}
+                  />
                 )}
                 <p>
                   {map
@@ -1138,12 +1162,12 @@ function App() {
                         )}
                         {j.error && <p className="warning">{j.error}</p>}
                         <div className="job-actions">
-                          <button
+                          <a
                             className="text-button"
-                            onClick={() => setSelectedJob(j)}
+                            href={`/api/jobs/${j.id}/log`}
                           >
-                            {t("Журнал")}
-                          </button>
+                            {t("Скачать журнал")}
+                          </a>
                           {["queued", "running"].includes(j.status) ? (
                             <button
                               className="text-button danger"
@@ -1360,7 +1384,11 @@ function App() {
             </>
           )}
         </div>
-        <VinylStage map={map} timelineHost={timelineHost} />
+        <VinylStage
+          map={map}
+          timelineHost={timelineHost}
+          suspended={!!selectedJob}
+        />
         <aside className="scene-rail" key={`scene-${page}`}>
           {page === "library" ? (
             <>
@@ -1770,7 +1798,7 @@ function App() {
       {selectedJob && (
         <dialog
           ref={jobDialog}
-          className="modal"
+          className="modal result-modal"
           aria-labelledby="job-dialog-title"
           onCancel={() => setSelectedJob(null)}
           onClick={(e) => {
@@ -1782,7 +1810,7 @@ function App() {
             <button
               autoFocus
               className="icon-btn"
-              aria-label={t("Закрыть журнал")}
+              aria-label={t("Закрыть просмотр")}
               onClick={() => setSelectedJob(null)}
             >
               <X size={20} />
@@ -1797,13 +1825,23 @@ function App() {
                 src={`/api/jobs/${selectedJob.id}/output`}
               />
             ) : (
-              <video controls src={`/api/jobs/${selectedJob.id}/output`} />
+              <VideoPlayer
+                key={selectedJob.id}
+                src={`/api/jobs/${selectedJob.id}/output`}
+              />
             ))}
-          <h3>{t("Журнал задания")}</h3>
-          <pre>
-            {state.jobs.find((j) => j.id === selectedJob.id)?.log ||
-              t("Задание ещё не запущено")}
-          </pre>
+          <div className="result-actions">
+            <a
+              className="button primary"
+              href={`/api/jobs/${selectedJob.id}/output?download=1`}
+            >
+              <ArrowDownToLine size={17} />
+              {t("Сохранить файл")}
+            </a>
+            <a className="text-button" href={`/api/jobs/${selectedJob.id}/log`}>
+              {t("Скачать журнал")}
+            </a>
+          </div>
         </dialog>
       )}
       <div className="studio-credit">
