@@ -2,6 +2,8 @@
 
 A local video studio for **osu!standard**, built on [danser-go](https://github.com/Wieku/danser-go). Create videos from replays or visualize a map with Cursor Dance / Autoplay. Available in English and Russian.
 
+The modified engine lives in a separate [Studio engine fork](https://github.com/ilyaminch/danser-go), linked to the original [Wieku/danser-go](https://github.com/Wieku/danser-go). This repository stores only a pinned Git submodule reference at `danser-go/`, rather than a vendored copy of its sources. Studio-specific engine changes are documented in [STUDIO.md](https://github.com/ilyaminch/danser-go/blob/a3a63324/STUDIO.md).
+
 ![Map visualization workspace](docs/screenshots/workspace.jpg)
 
 ## Features
@@ -20,7 +22,7 @@ Settings stay in the browser tab session. Uploaded replay copies are deleted aft
 Requires **Node.js 24+**, **FFmpeg/ffprobe**, and the Studio engine with its runtime assets. There is no installer yet.
 
 ```powershell
-git clone https://github.com/ilyaminch/danser-go-webui.git
+git clone --recurse-submodules https://github.com/ilyaminch/danser-go-webui.git
 cd danser-go-webui/web
 npm ci
 npm run build
@@ -31,6 +33,8 @@ cd ..
 2. Place Go 1.26.1 at `.tools/go/` and WinLibs GCC x64 (POSIX, MSVCRT; tested with 16.2.0) at `.tools/mingw64/`. Run `./Build-Engine.ps1` to build `runtime/danser-studio.exe`.
 3. For lazer support, install .NET SDK 9+ and run `./Build-LazerIndex.ps1`.
 4. Open `Start-Studio.cmd`, then configure FFmpeg and map sources under **Connection** at **http://127.0.0.1:3000**.
+
+For an existing checkout, run `git submodule update --init --recursive` after pulling WebUI changes. This checks out the engine commit recorded by WebUI. ZIP downloads do not contain submodule sources; use Git for development/building. Engine updates require an explicit submodule commit change and review, rather than tracking a moving branch. The current engine pin includes native security changes awaiting isolated tests and build validation; it is not a new validated release.
 
 ## Use
 
@@ -58,6 +62,8 @@ npm run build
 
 Engine integration checks are in `web/test/integration.mjs` and require the engine, assets, and FFmpeg. Local data lives in `web/data/`; runtime, credentials, generated media, and development notes are excluded from Git.
 
+WebUI code is developed here; engine changes belong in the fork. Keep the submodule checkout at its recorded commit during WebUI work. Develop and review engine changes on the fork's feature/fix branches first, then update the WebUI submodule reference. `Build-Engine.ps1` builds the pinned sources without formatting/modifying them, and includes native input-limit regressions and the nested replay decoder tests.
+
 ## Limitations and license
 
 Studio binds to loopback and is intended for one trusted OS user. It is not a hosted multiuser service and has no authentication boundary between OS accounts. HTML responses disallow framing; existing Host/Origin and mutation-header checks remain enabled.
@@ -70,4 +76,4 @@ Optional map videos use owner-selected FFmpeg and are disabled by default. Secon
 
 One map per video; no automatic map download, editing across maps, or render pause. The tested platform is Windows; Linux packaging is untested and upstream does not support macOS. Compatibility with every lazer replay/mod combination is not guaranteed.
 
-This is an unofficial companion with a modified engine. See the [engine documentation](danser-go/README.md), [credits](danser-go/CREDITS.md), [asset notices](web/public/ASSETS.md), and [GPL-3.0 license](LICENSE). The `v0.2.0` tag preserves the version before the frontend redesign.
+This is an unofficial companion with a modified engine. See the [engine documentation](https://github.com/ilyaminch/danser-go/blob/a3a63324/README.md), [engine credits](https://github.com/ilyaminch/danser-go/blob/a3a63324/CREDITS.md), [asset notices](web/public/ASSETS.md), and [GPL-3.0 license](LICENSE). Original engine authorship and third-party license notices are preserved in the fork. The `v0.2.0` tag preserves the version before the frontend redesign.

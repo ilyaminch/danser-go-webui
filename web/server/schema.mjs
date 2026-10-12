@@ -4,7 +4,11 @@ import path from 'node:path';
 // Read the pinned engine's public Go fields and UI tags; defaults remain owned by danser.
 export async function loadSchema(engineDir) {
   const types={};
-  for(const file of await readdir(path.join(engineDir,'app/settings'))) {
+  const settingsDir=path.join(engineDir,'app/settings');
+  let files;
+  try { files=await readdir(settingsDir); }
+  catch(error) { if(error.code==='ENOENT') throw new Error('Исходники движка не загружены. Выполните git submodule update --init --recursive в папке WebUI.'); throw error; }
+  for(const file of files) {
     if(!file.endsWith('.go') || file==='general_others.go') continue;
     const source=await readFile(path.join(engineDir,'app/settings',file),'utf8');
     for(const match of source.matchAll(/type\s+(\w+)\s+struct\s*\{([\s\S]*?)^\}/gm)) {
