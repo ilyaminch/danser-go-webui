@@ -8,6 +8,10 @@ $taskRoot = $PSScriptRoot
 $taskStage = Join-Path $OutputDirectory ('DanserStudio-' + $Version + '-windows-x64')
 if (Test-Path -LiteralPath $taskStage) { throw 'Package stage already exists. Use a fresh output directory to avoid overwriting user data.' }
 if (!(Test-Path -LiteralPath (Join-Path $EngineDirectory 'danser-studio.exe'))) { throw 'Build and test the Studio engine before packaging.' }
+$taskEngineBuild = Get-Content -LiteralPath (Join-Path $EngineDirectory 'engine-build.json') -Raw | ConvertFrom-Json
+$taskEngineCommit = if (Test-Path -LiteralPath (Join-Path $taskRoot 'danser-go/.git')) { (& git -C (Join-Path $taskRoot 'danser-go') rev-parse HEAD).Trim() } else { (Get-Content -LiteralPath (Join-Path $taskRoot 'SOURCE_VERSION.json') -Raw | ConvertFrom-Json).engineCommit }
+$taskEngineVersion = (Get-Content -LiteralPath (Join-Path $taskRoot 'danser-go/STUDIO_VERSION') -Raw).Trim()
+if ($taskEngineBuild.commit -ne $taskEngineCommit -or $taskEngineBuild.version -ne $taskEngineVersion -or $taskEngineBuild.sha256 -ne (Get-FileHash -LiteralPath (Join-Path $EngineDirectory 'danser-studio.exe') -Algorithm SHA256).Hash) { throw 'Engine build does not match the pinned source/version/hash. Rebuild the engine before packaging.' }
 New-Item -ItemType Directory -Force -Path $taskStage,(Join-Path $taskStage 'web'),(Join-Path $taskStage 'runtime'),(Join-Path $taskStage '.runtime/node'),(Join-Path $taskStage 'packaging/licenses') | Out-Null
 $taskDependencies = Get-Content -LiteralPath (Join-Path $taskRoot 'packaging/runtime-dependencies.json') -Raw | ConvertFrom-Json
 $taskDownloads = Join-Path $taskRoot '.local-work/downloads'
@@ -31,7 +35,7 @@ Copy-Item -LiteralPath (Join-Path $taskRoot 'packaging/runtime-dependencies.json
 Copy-Item -Path (Join-Path $taskRoot 'packaging/licenses/*') -Destination (Join-Path $taskStage 'packaging/licenses')
 foreach ($taskName in @('server','shared','dist')) { Copy-Item -LiteralPath (Join-Path $taskRoot "web/$taskName") -Destination (Join-Path $taskStage 'web') -Recurse }
 foreach ($taskName in @('package.json','package-lock.json')) { Copy-Item -LiteralPath (Join-Path $taskRoot "web/$taskName") -Destination (Join-Path $taskStage 'web') }
-foreach ($taskName in @('danser-studio.exe','libwinpthread-1.dll')) { Copy-Item -LiteralPath (Join-Path $EngineDirectory $taskName) -Destination (Join-Path $taskStage 'runtime') }
+foreach ($taskName in @('danser-studio.exe','libwinpthread-1.dll','engine-build.json')) { Copy-Item -LiteralPath (Join-Path $EngineDirectory $taskName) -Destination (Join-Path $taskStage 'runtime') }
 Copy-Item -LiteralPath (Join-Path $taskRoot 'danser-go/CREDITS.md') -Destination (Join-Path $taskStage 'runtime')
 Copy-Item -LiteralPath (Join-Path $EngineDirectory 'lazer-index') -Destination (Join-Path $taskStage 'runtime') -Recurse
 & (Join-Path $taskStage '.runtime/node/node.exe') (Join-Path $taskRoot 'packaging/write-schema.mjs') (Join-Path $taskStage 'web/server/schema.json')
@@ -45,7 +49,7 @@ try {
     & npm.cmd ci --omit=dev --ignore-scripts --offline --no-audit --no-fund
     if ($LASTEXITCODE -ne 0) { throw 'Production dependency installation failed' }
 } finally { Pop-Location }
-$taskMetadata = @{ version=$Version; engineCommit=(& git -C (Join-Path $taskRoot 'danser-go') rev-parse HEAD); engineVersion='0.12.0-studio.1'; sourceUrl=('https://github.com/ilyaminch/danser-go-webui/releases/download/v' + $Version + '/DanserStudio-' + $Version + '-source.zip') }
+$taskMetadata = @{ version=$Version; engineCommit=$taskEngineCommit; engineVersion=$taskEngineVersion; sourceUrl=('https://github.com/ilyaminch/danser-go-webui/releases/download/v' + $Version + '/DanserStudio-' + $Version + '-source.zip') }
 [IO.File]::WriteAllText((Join-Path $taskStage 'release.json'), ($taskMetadata | ConvertTo-Json))
 $taskPackage = $taskStage + '.zip'
 Compress-Archive -Path $taskStage -DestinationPath $taskPackage

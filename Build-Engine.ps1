@@ -31,7 +31,7 @@ $env:GOCACHE = Join-Path $taskRoot '.tools/go-cache'
 $env:GOMODCACHE = Join-Path $taskRoot '.tools/go-mod'
 Push-Location $taskEngineSource
 try {
-    & $goExe build -ldflags $taskLinkFlags -o (Join-Path $taskRuntime 'danser-studio.exe') ./tools/studio-cli
+    & $goExe build -buildvcs=false -ldflags $taskLinkFlags -o (Join-Path $taskRuntime 'danser-studio.exe') ./tools/studio-cli
     if ($LASTEXITCODE -ne 0) { throw 'Сборка движка завершилась с ошибкой.' }
     & $goExe test -ldflags $taskLinkFlags ./app/settings ./app/dance ./app/states ./framework/files ./framework/graphics/texture
     if ($LASTEXITCODE -ne 0) { throw 'Проверки движка завершились с ошибкой.' }
@@ -41,3 +41,10 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Проверки декодера реплеев завершились с ошибкой.' }
     } finally { Pop-Location }
 } finally { Pop-Location }
+$taskSourceCommit = if (Test-Path -LiteralPath (Join-Path $taskEngineSource '.git')) {
+    (& git -C $taskEngineSource rev-parse HEAD).Trim()
+} else {
+    (Get-Content -LiteralPath (Join-Path $taskRoot 'SOURCE_VERSION.json') -Raw | ConvertFrom-Json).engineCommit
+}
+$taskBuildInfo = @{ version=$EngineVersion; commit=$taskSourceCommit; sha256=(Get-FileHash -LiteralPath (Join-Path $taskRuntime 'danser-studio.exe') -Algorithm SHA256).Hash.ToLowerInvariant() }
+[IO.File]::WriteAllText((Join-Path $taskRuntime 'engine-build.json'), ($taskBuildInfo | ConvertTo-Json))
