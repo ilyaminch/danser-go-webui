@@ -2,7 +2,7 @@
 
 A local video studio for **osu!standard**, built on [danser-go](https://github.com/Wieku/danser-go). Create videos from replays or visualize a map with Cursor Dance / Autoplay. Available in English and Russian.
 
-The modified engine lives in a separate [Studio engine fork](https://github.com/ilyaminch/danser-go), linked to the original [Wieku/danser-go](https://github.com/Wieku/danser-go). This repository stores only a pinned Git submodule reference at `danser-go/`, rather than a vendored copy of its sources. Studio-specific engine changes are documented in [STUDIO.md](https://github.com/ilyaminch/danser-go/blob/a3a63324/STUDIO.md).
+The modified engine lives in a separate [Studio engine fork](https://github.com/ilyaminch/danser-go), linked to the original [Wieku/danser-go](https://github.com/Wieku/danser-go). This repository stores only a pinned Git submodule reference at `danser-go/`, rather than a vendored copy of its sources. Studio-specific engine changes are documented in [STUDIO.md](https://github.com/ilyaminch/danser-go/blob/ba7c554e/STUDIO.md).
 
 ![Map visualization workspace](docs/screenshots/workspace.jpg)
 
@@ -76,4 +76,4 @@ Optional map videos use owner-selected FFmpeg and are disabled by default. Secon
 
 One map per video; no automatic map download, editing across maps, or render pause. The tested platform is Windows; Linux packaging is untested and upstream does not support macOS. Compatibility with every lazer replay/mod combination is not guaranteed.
 
-This is an unofficial companion with a modified engine. See the [engine documentation](https://github.com/ilyaminch/danser-go/blob/a3a63324/README.md), [engine credits](https://github.com/ilyaminch/danser-go/blob/a3a63324/CREDITS.md), [asset notices](web/public/ASSETS.md), and [GPL-3.0 license](LICENSE). Original engine authorship and third-party license notices are preserved in the fork. The `v0.2.0` tag preserves the version before the frontend redesign.
+This is an unofficial companion with a modified engine. See the [engine documentation](https://github.com/ilyaminch/danser-go/blob/ba7c554e/README.md), [engine credits](https://github.com/ilyaminch/danser-go/blob/ba7c554e/CREDITS.md), [asset notices](web/public/ASSETS.md), and [GPL-3.0 license](LICENSE). Original engine authorship and third-party license notices are preserved in the fork. The `v0.2.0` tag preserves the version before the frontend redesign.
