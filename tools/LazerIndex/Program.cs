@@ -10,8 +10,10 @@ try
     var sets = new Dictionary<string, object>();
     foreach (dynamic map in realm.DynamicApi.All("Beatmap"))
     {
-        dynamic set = map.BeatmapSet!;
-        if (set == null || (bool)set.DeletePending || (long)map.Ruleset.OnlineID != 0) continue;
+        dynamic? set = map.BeatmapSet;
+        dynamic? ruleset = map.Ruleset;
+        if (set is null || ruleset is null) continue;
+        if ((bool)set.DeletePending || (long)ruleset.OnlineID != 0) continue;
         string setKey = set.ID.ToString();
         if (!sets.ContainsKey(setKey))
         {

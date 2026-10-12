@@ -29,6 +29,8 @@ import {
 } from "./import-security.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const { version } = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
+const bundledFFmpeg = path.resolve(root, "../runtime/ffmpeg/ffmpeg.exe");
 const dataDir = process.env.STUDIO_DATA_DIR || path.join(root, "data");
 const port = Number(process.env.PORT || 3000);
 const store = openStore(dataDir),
@@ -43,7 +45,7 @@ if (!store.get("config", "local"))
     skinsDir: "",
     replaysDir: "",
     outputDir: path.join(dataDir, "videos"),
-    ffmpegPath: "ffmpeg",
+    ffmpegPath: existsSync(bundledFFmpeg) ? bundledFFmpeg : "ffmpeg",
   });
 const bundledEngine = path.resolve(root, "../runtime/danser-studio.exe");
 const localConfig = store.get("config", "local");
@@ -98,6 +100,7 @@ const asyncRoute = (fn) => (req, res, next) =>
     .finally(() => req.releaseImport?.());
 app.get("/api/state", (req, res) =>
   res.json({
+    version,
     replays: workspaceReplays(store),
     ...(!req.query.compact || req.query.catalog
       ? { maps: store.list("map") }
@@ -197,6 +200,27 @@ app.get(
     try {
       await runCommand(config.ffmpegPath || "ffmpeg", ["-version"]);
       result.ffmpeg = true;
+      try {
+        await runCommand(config.ffmpegPath || "ffmpeg", [
+          "-nostdin",
+          "-v",
+          "error",
+          "-f",
+          "lavfi",
+          "-i",
+          "color=s=128x128:r=1",
+          "-frames:v",
+          "1",
+          "-c:v",
+          "h264_nvenc",
+          "-f",
+          "null",
+          "-",
+        ]);
+        result.recommendedEncoder = "h264_nvenc";
+      } catch {
+        result.recommendedEncoder = "libx264";
+      }
     } catch (e) {
       result.ffmpegError = e.message;
     }
