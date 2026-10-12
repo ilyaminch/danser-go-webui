@@ -60,6 +60,14 @@ Engine integration checks are in `web/test/integration.mjs` and require the engi
 
 ## Limitations and license
 
+Studio binds to loopback and is intended for one trusted OS user. It is not a hosted multiuser service and has no authentication boundary between OS accounts. HTML responses disallow framing; existing Host/Origin and mutation-header checks remain enabled.
+
+Import limits: 200 replays, 20 MiB per replay and 256 MiB of actual file payload per request (including chunked uploads). Imports run one at a time; multipart text fields are rejected. Map text is limited to 8 MiB with 64 KiB lines and parsed in a bounded worker. Archives retain a 1 GiB expanded budget and now count bytes while extracting.
+
+The Studio engine restricts map backgrounds to the selected map directory, including symbolic link traversal, with the usual default-background fallback. External symbolic links cannot supply backgrounds; for lazer, keep the temporary view on the storage volume so hard links can be used. Replay decoding caps actual LZMA output at 64 MiB (4 MiB metadata), dictionaries at 16 MiB and frames at two million. Image decoding caps input at 64 MiB, dimensions at 8192 per side and 16 megapixels, with 256 MiB of live decoded pixmaps and 2 GiB of texture storage including mipmaps. These engine changes require rebuilding `danser-studio.exe`.
+
+Optional map videos use owner-selected FFmpeg and are disabled by default. Secondary media references depend on the FFmpeg build and need separate isolated validation; file-path checks alone do not sandbox the subprocess.
+
 One map per video; no automatic map download, editing across maps, or render pause. The tested platform is Windows; Linux packaging is untested and upstream does not support macOS. Compatibility with every lazer replay/mod combination is not guaranteed.
 
 This is an unofficial companion with a modified engine. See the [engine documentation](danser-go/README.md), [credits](danser-go/CREDITS.md), [asset notices](web/public/ASSETS.md), and [GPL-3.0 license](LICENSE). The `v0.2.0` tag preserves the version before the frontend redesign.

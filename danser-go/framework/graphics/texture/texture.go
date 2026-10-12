@@ -45,10 +45,20 @@ type textureStore struct {
 	format                         Format
 	min, mag                       Filter
 	disposed                       bool
+	budgetBytes                    int64
 }
 
 func newStore(layerNum, width, height int, format Format, mipmaps int) *textureStore {
+	pixelBytes := format.Size()
+	if format.Type() == gl.FLOAT {
+		pixelBytes *= 4
+	}
+	allocated := textureSize(layerNum, width, height, pixelBytes, mipmaps)
+	if !reserveBytes(&textureBytes, allocated, maxTextureBytes) {
+		panic("textures exceed 2 GiB")
+	}
 	store := new(textureStore)
+	store.budgetBytes = allocated
 
 	gl.CreateTextures(gl.TEXTURE_2D_ARRAY, 1, &store.id)
 
@@ -148,6 +158,7 @@ func (store *textureStore) SetFiltering(min, mag Filter) {
 func (store *textureStore) Dispose() {
 	if !store.disposed {
 		gl.DeleteTextures(1, &store.id)
+		textureBytes.Add(-store.budgetBytes)
 	}
 
 	store.disposed = true

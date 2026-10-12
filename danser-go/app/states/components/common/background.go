@@ -14,6 +14,7 @@ import (
 	"github.com/wieku/danser-go/app/storyboard"
 	"github.com/wieku/danser-go/framework/assets"
 	"github.com/wieku/danser-go/framework/bass"
+	"github.com/wieku/danser-go/framework/files"
 	"github.com/wieku/danser-go/framework/goroutines"
 	"github.com/wieku/danser-go/framework/graphics/batch"
 	"github.com/wieku/danser-go/framework/graphics/effects"
@@ -80,7 +81,16 @@ func NewBackground(loadDefault bool) *Background {
 
 func (bg *Background) SetBeatmap(beatMap *beatmap.BeatMap, loadDefault, loadStoryboards bool) {
 	bgLoadFunc := func() {
-		image, err := texture.NewPixmapFileString(filepath.Join(settings.General.GetSongsDir(), beatMap.Dir, beatMap.Bg))
+		var image *texture.Pixmap
+		resource, err := beatMap.GetRelatedFile(beatMap.Bg)
+		if err == nil {
+			file, openErr := files.OpenContained(filepath.Join(settings.General.GetSongsDir(), beatMap.Dir), resource)
+			err = openErr
+			if err == nil {
+				image, err = texture.NewPixmapFile(file)
+				file.Close()
+			}
+		}
 		if err != nil && loadDefault {
 			image, err = assets.GetPixmap("assets/textures/background-1.png")
 			if err != nil {
