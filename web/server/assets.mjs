@@ -10,6 +10,8 @@ import {
 } from "node:fs/promises";
 import { createWriteStream } from "node:fs";
 import { pipeline } from "node:stream/promises";
+import { Transform } from "node:stream";
+import { IMPORT_BYTES, MAP_BYTES, readLimitedFile } from "./limits.mjs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { safeResourceName } from "./lazer.mjs";
@@ -35,7 +37,8 @@ export async function extractArchive(buffer, destination) {
   );
   await mkdir(destination, { recursive: true });
   let count = 0,
-    total = 0;
+    total = 0,
+    actualTotal = 0;
   const names = new Set();
   try {
     await new Promise((resolve, reject) => {
@@ -66,11 +69,33 @@ export async function extractArchive(buffer, destination) {
           const target = path.join(destination, ...name.split("/"));
           if (directory) await mkdir(target, { recursive: true });
           else {
+            const entryLimit = name.toLowerCase().endsWith(".osu")
+              ? MAP_BYTES
+              : IMPORT_BYTES;
+            if (entry.uncompressedSize > entryLimit)
+              throw new Error("Ресурс архива превышает лимит размера");
             await mkdir(path.dirname(target), { recursive: true });
             const input = await new Promise((r, j) =>
               zip.openReadStream(entry, (e, s) => (e ? j(e) : r(s))),
             );
-            await pipeline(input, createWriteStream(target, { flags: "wx" }));
+            let actual = 0;
+            const budget = new Transform({
+              transform(chunk, _encoding, callback) {
+                actual += chunk.length;
+                actualTotal += chunk.length;
+                callback(
+                  actual > entryLimit || actualTotal > 1024 * 1024 * 1024
+                    ? new Error("Распакованный архив превышает лимит размера")
+                    : null,
+                  chunk,
+                );
+              },
+            });
+            await pipeline(
+              input,
+              budget,
+              createWriteStream(target, { flags: "wx" }),
+            );
           }
           zip.readEntry();
         })().catch(reject);
@@ -151,7 +176,11 @@ export async function listSkins(store, dataDir) {
         if ((await stat(root)).size > 256 * 1024 * 1024)
           throw new Error(`Скин ${entry.name} превышает 256 МБ`);
         skins.push({
-          ...(await importSkin(dataDir, await readFile(root), entry.name)),
+          ...(await importSkin(
+            dataDir,
+            await readLimitedFile(root, IMPORT_BYTES),
+            entry.name,
+          )),
         });
       }
     }

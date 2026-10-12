@@ -1,0 +1,3 @@
+[submodule "danser-go"]
+	path = danser-go
+	url = https://github.com/ilyaminch/danser-go.git
