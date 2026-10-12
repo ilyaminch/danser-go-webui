@@ -1,4 +1,4 @@
-param([string]$OutputDirectory = (Join-Path $PSScriptRoot '.local-work/source-packages'), [string]$Version = '0.4.0')
+param([string]$OutputDirectory = (Join-Path $PSScriptRoot '.local-work/source-packages'), [string]$Version = '0.4.1')
 $ErrorActionPreference = 'Stop'
 $taskRoot = $PSScriptRoot
 $taskStage = Join-Path $OutputDirectory ('DanserStudio-' + $Version + '-source')

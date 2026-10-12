@@ -6,7 +6,7 @@ A local video studio for **osu!standard**, powered by [Wieku/danser-go](https://
 
 ## Download and start
 
-Download **DanserStudio-0.4.0-windows-x64.zip** from the [latest release](https://github.com/ilyaminch/danser-go-webui/releases/latest), extract it into a writable folder, and open **Start-Studio.cmd**. The application opens at **http://127.0.0.1:3000**. Keep the entire extracted folder together; avoid protected system folders.
+Download **DanserStudio-0.4.1-windows-x64.zip** from the [latest release](https://github.com/ilyaminch/danser-go-webui/releases/latest), extract it into a writable folder, and open **Start-Studio.cmd**. The application opens at **http://127.0.0.1:3000**. Keep the entire extracted folder together; avoid protected system folders.
 
 Requires Windows 10/11 x64, a graphics driver supporting OpenGL 3.3, and internet access on first launch. Node.js, the Studio engine and the lazer index helper are bundled; no compiler, Node or .NET installation is needed. First launch downloads the original danser runtime resources and FFmpeg from their distributors, verifies pinned SHA-256 hashes, and installs them locally. These downloads may take a few minutes. Subsequent launches work offline with local maps.
 
@@ -40,7 +40,7 @@ npm run build
 cd ..
 ```
 
-After pulling, run `git submodule update --init --recursive`. GitHub's automatic source ZIP does not expand submodules; use the **DanserStudio-0.4.0-source.zip** release asset for complete sources, including engine dependency sources. See [SOURCE.md](SOURCE.md).
+After pulling, run `git submodule update --init --recursive`. GitHub's automatic source ZIP does not expand submodules; use the **DanserStudio-0.4.1-source.zip** release asset for complete sources, including engine dependency sources. See [SOURCE.md](SOURCE.md).
 
 Source builds require Node.js 24+, Go 1.26.1 at `.tools/go/`, WinLibs GCC x64 POSIX/MSVCRT at `.tools/mingw64/` (tested with 16.2.0), and .NET SDK 10 for lazer support. Prepare original runtime dependencies with `./Initialize-Runtime.ps1`, then run `./Build-Engine.ps1` and `./Build-LazerIndex.ps1`. Install FFmpeg in `runtime/ffmpeg/` or configure its executable under Connection. `./Build-Package.ps1` produces the portable Windows package; a tested engine/helper must already exist in `.local-work/release-runtime/` by default. No real maps, replays, output media or credentials are published.
 
