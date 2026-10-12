@@ -10,7 +10,7 @@ Download **DanserStudio-0.4.0-windows-x64.zip** from the [latest release](https:
 
 Requires Windows 10/11 x64, a graphics driver supporting OpenGL 3.3, and internet access on first launch. Node.js, the Studio engine and the lazer index helper are bundled; no compiler, Node or .NET installation is needed. First launch downloads the original danser runtime resources and FFmpeg from their distributors, verifies pinned SHA-256 hashes, and installs them locally. These downloads may take a few minutes. Subsequent launches work offline with local maps.
 
-Use **Stop-Studio.cmd** to cancel pending jobs and stop the local server. Closing the browser does not stop it. To use another port, run `./Start-Studio.ps1 -Port 3001`. If PowerShell is blocked by your organization's policy, follow that policy rather than disabling it globally.
+Use **Stop-Studio.cmd** to cancel pending jobs and stop the local server. Closing the browser does not stop it. To use another port, run `Start-Studio.cmd -Port 3001`. The CMD launchers allow their bundled PowerShell scripts for that process only; they do not change your system execution policy. Enforced organization policies still apply.
 
 For manual dependency installation, see [packaging/runtime-dependencies.json](packaging/runtime-dependencies.json). Place the original runtime assets/DLLs in `runtime/` and FFmpeg/ffprobe in `runtime/ffmpeg/`; preserve their license notices. Logs and application data live in `web/data/`. Output location can be changed under **Connection**. Updating is simplest by extracting the new release into a new folder; do not replace a running instance.
 
