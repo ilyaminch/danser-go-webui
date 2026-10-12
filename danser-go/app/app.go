@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -33,6 +32,7 @@ import (
 	"github.com/wieku/danser-go/framework/assets"
 	"github.com/wieku/danser-go/framework/bass"
 	"github.com/wieku/danser-go/framework/env"
+	"github.com/wieku/danser-go/framework/files"
 	"github.com/wieku/danser-go/framework/frame"
 	"github.com/wieku/danser-go/framework/goroutines"
 	batch2 "github.com/wieku/danser-go/framework/graphics/batch"
@@ -217,7 +217,7 @@ func run() {
 		var modsNew []rplpa.ModInfo = nil
 
 		if *replay != "" {
-			bytes, err := ioutil.ReadFile(*replay)
+			bytes, err := files.ReadLimited(*replay, 20*1024*1024)
 			if err != nil {
 				panic(err)
 			}

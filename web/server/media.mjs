@@ -1,6 +1,7 @@
-import { readFile, realpath, stat } from "node:fs/promises";
+import { realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { safeResourceName, storageFile } from "./lazer.mjs";
+import { MAP_BYTES, readLimitedFile } from "./limits.mjs";
 
 // Read filenames from the actual .osu, including indexes made before media support.
 export function parseMedia(text) {
@@ -32,7 +33,9 @@ export function parseMedia(text) {
 export async function resolveMedia(store, map, kind) {
   if (!["audio", "background"].includes(kind))
     throw new Error("Unknown media type");
-  const names = parseMedia(await readFile(map.path, "utf8"));
+  const names = parseMedia(
+    (await readLimitedFile(map.path, MAP_BYTES)).toString("utf8"),
+  );
   if (!names[kind]) return null;
   const name = safeResourceName(names[kind]);
   let file, root;

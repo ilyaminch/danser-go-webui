@@ -3,6 +3,7 @@ package beatmap
 import (
 	"cmp"
 	"errors"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
@@ -18,7 +19,7 @@ import (
 	"github.com/wieku/danser-go/framework/math/mutils"
 )
 
-const bufferSize = 10 * 1024 * 1024
+const bufferSize = 64*1024 + 2 // room for the line terminator at the 64 KiB boundary
 
 func parseGeneral(line []string, beatMap *BeatMap) bool {
 	switch line[0] {
@@ -157,8 +158,15 @@ func ParseBeatMap(beatMap *BeatMap) error {
 	}
 
 	defer file.Close()
+	info, err := file.Stat()
+	if err != nil {
+		return err
+	}
+	if !info.Mode().IsRegular() || info.Size() > 8*1024*1024 {
+		return errors.New("beatmap text exceeds 8 MiB")
+	}
 
-	scanner := files.NewScanner(file)
+	scanner := files.NewScanner(io.LimitReader(file, 8*1024*1024))
 
 	buf := bufferPool.Get().(*[]byte)
 	scanner.Buffer(*buf, cap(*buf))
@@ -231,6 +239,9 @@ func ParseBeatMap(beatMap *BeatMap) error {
 	beatMap.FinalizePoints()
 
 	file.Seek(0, 0)
+	if err := scanner.Err(); err != nil {
+		return err
+	}
 
 	if beatMap.Name+beatMap.Artist+beatMap.Creator == "" || counter == 0 {
 		return errors.New("corrupted file")
@@ -268,7 +279,7 @@ func ParseTimingPointsAndPauses(beatMap *BeatMap) {
 
 	defer file.Close()
 
-	scanner := files.NewScanner(file)
+	scanner := files.NewScanner(io.LimitReader(file, 8*1024*1024))
 
 	buf := bufferPool.Get().(*[]byte)
 	scanner.Buffer(*buf, cap(*buf))
@@ -309,7 +320,7 @@ func ParseObjects(beatMap *BeatMap, diffCalcOnly, parseColors bool) {
 
 	defer file.Close()
 
-	scanner := files.NewScanner(file)
+	scanner := files.NewScanner(io.LimitReader(file, 8*1024*1024))
 
 	buf := bufferPool.Get().(*[]byte)
 	scanner.Buffer(*buf, cap(*buf))

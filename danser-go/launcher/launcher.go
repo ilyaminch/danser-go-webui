@@ -1077,7 +1077,7 @@ func (l *launcher) loadReplay(p string) (*knockoutReplay, error) {
 		return nil, fmt.Errorf("it's not a replay file")
 	}
 
-	rData, err := os.ReadFile(p)
+	rData, err := files.ReadLimited(p, 20*1024*1024)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open file: %s", err)
 	}

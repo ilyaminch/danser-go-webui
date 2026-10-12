@@ -60,3 +60,6 @@ require (
 replace github.com/sqweek/dialog => github.com/wieku/dialog v1.0.0
 
 replace github.com/AllenDang/cimgui-go => github.com/Wieku/cimgui-go v1.0.1
+
+// Studio's bounded decoder applies to every native replay entrypoint.
+replace github.com/wieku/rplpa => ./third_party/rplpa

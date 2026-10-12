@@ -13,7 +13,9 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseMap, scanMaps } from "./maps.mjs";
+import { scanMaps } from "./maps.mjs";
+import { parseMapSafely } from "./parse-worker.mjs";
+import { MAP_BYTES, readLimitedFile } from "./limits.mjs";
 
 const helper = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -121,7 +123,10 @@ export async function indexLazer(store, root, raw) {
       if (!osu) throw new Error("Исходный .osu не найден");
       safeResourceName(osu.name);
       const absolute = storageFile(root, item.sha256),
-        map = parseMap(await readFile(absolute), absolute);
+        map = await parseMapSafely(
+          await readLimitedFile(absolute, MAP_BYTES),
+          absolute,
+        );
       if (!map) continue;
       if (map.hash !== item.hash.toLowerCase())
         throw new Error("MD5 файла отличается от индекса");
@@ -254,9 +259,10 @@ export async function prepareMapView(store, map, config) {
         }
       }
     }
-    const actual = parseMap(
-      await readFile(
+    const actual = await parseMapSafely(
+      await readLimitedFile(
         path.join(view, "map", ...safeResourceName(map.filename).split("/")),
+        MAP_BYTES,
       ),
       map.path,
     );

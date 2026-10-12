@@ -95,12 +95,15 @@ func (controller *ReplayController) SetBeatMap(beatMap *beatmap.BeatMap) {
 	if settings.REPLAY != "" {
 		log.Println("Loading: ", settings.REPLAY)
 
-		data, err := os.ReadFile(settings.REPLAY)
+		data, err := files.ReadLimited(settings.REPLAY, 20*1024*1024)
 		if err != nil {
 			panic(err)
 		}
 
-		replayD, _ := rplpa.ParseReplay(data)
+		replayD, err := rplpa.ParseReplay(data)
+		if err != nil {
+			panic(err)
+		}
 
 		if replayD.ReplayData == nil || len(replayD.ReplayData) == 0 {
 			log.Println("Excluding for missing input data:", replayD.Username)
@@ -206,7 +209,7 @@ func organizeReplays() {
 	for _, osPathname := range unorganizedReplays {
 		log.Println("Checking: ", osPathname)
 
-		data, err := os.ReadFile(osPathname)
+		data, err := files.ReadLimited(osPathname, 20*1024*1024)
 		if err != nil {
 			log.Println("Error reading file: ", err)
 			log.Println("Skipping... ")
@@ -247,7 +250,7 @@ func (controller *ReplayController) getCandidates() (candidates []*rplpa.Replay)
 	tryAddReplay := func(path string, modExclude bool) {
 		log.Println("Loading: ", path)
 
-		data, err := os.ReadFile(path)
+		data, err := files.ReadLimited(path, 20*1024*1024)
 		if err != nil {
 			panic(err)
 		}

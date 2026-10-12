@@ -3,6 +3,7 @@ package beatmap
 import (
 	"cmp"
 	"math"
+	"os"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -226,7 +227,11 @@ func (beatMap *BeatMap) getPathCache() *files.FileMap {
 }
 
 func (beatMap *BeatMap) GetRelatedFile(path string) (string, error) {
-	return beatMap.getPathCache().GetFile(path)
+	cache := beatMap.getPathCache()
+	if cache == nil {
+		return "", os.ErrNotExist
+	}
+	return cache.GetFile(path)
 }
 
 func (beatMap *BeatMap) GetAudioFile() (string, error) {
